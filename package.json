@@ -7,5 +7,11 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "bin": {
+    "registrar": "index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.55.1"
   }
 }
