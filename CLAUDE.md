@@ -187,3 +187,9 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 - **Provider Validation**: Invalid provider names are caught and logged
 - **API Failures**: Provider creation and generation failures are properly caught and re-thrown
 - **Type Safety**: Zod schema validation ensures consistent commit message structure
+
+## Testing Philosophy
+
+- **Isolate and Verify**: When fixing test failures, make one logical change at a time (e.g., install a dependency, add one test) and run the *entire* test suite to verify the change. This prevents compounding errors.
+- **Diagnose the Environment**: If tests fail unexpectedly after a change, the root cause is likely the testing environment itself (e.g., missing dependencies, conflicting mocks), not just the test code. Prioritize fixing the environment over creating workarounds.
+- **Avoid Failure Loops**: If a strategy fails, do not repeat it. Analyze *why* it failed and choose a different approach. Trust a "known good state" as a safe point to revert to.

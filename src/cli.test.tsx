@@ -19,6 +19,43 @@ mock.module('ink-spinner', () => ({
 }));
 
 test('should render checking status', () => {
-  const { lastFrame } = require('ink').render(<Cli status="checking" />);
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="checking" />);
+  expect(lastFrame()).toBe('mocked frame');
+});
+
+test('should render success status', () => {
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="success" />);
+  expect(lastFrame()).toBe('mocked frame');
+});
+
+test('should render error status', () => {
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="error" error="Test Error" />);
+  expect(lastFrame()).toBe('mocked frame');
+});
+
+test('should render message-only status', () => {
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="message-only" message="Test Message" />);
+  expect(lastFrame()).toBe('mocked frame');
+});
+
+test('should render generating status', () => {
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="generating" />);
+  expect(lastFrame()).toBe('mocked frame');
+});
+
+test('should render retrying status', () => {
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="retrying" attempt={2} maxAttempts={3} />);
+  expect(lastFrame()).toBe('mocked frame');
+});
+
+test('should render committing status', () => {
+  const { render } = require('ink');
+  const { lastFrame } = render(<Cli status="committing" />);
   expect(lastFrame()).toBe('mocked frame');
 });
