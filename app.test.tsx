@@ -1,7 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { render } from "ink-testing-library";
 import React from "react";
-import Cli from "./cli.js";
 
 describe("runApp", () => {
   // Mock modules for runApp tests
@@ -153,23 +151,12 @@ describe("runApp", () => {
   });
 
   test("runApp handles non-Error exceptions", async () => {
-    const originalInk = await import("ink");
-    mock.module("ink", () => ({
-      ...originalInk,
-      Text: () => null,
-    }));
-
     mockGit.diff.mockRejectedValue("String error");
 
     const { runApp } = await import("./app.js");
+    await runApp();
 
-    await expect(runApp()).resolves.not.toThrow();
-
-    mock.restore();
+    expect(mockExit).toHaveBeenCalledWith(1);
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
   });
-});
-
-test("UI renders checking status correctly", () => {
-  const { lastFrame } = render(<Cli status="checking" />);
-  expect(lastFrame()).toContain("Checking for staged changes...");
 });

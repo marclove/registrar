@@ -53,20 +53,12 @@ test("main function should call runApp", async () => {
 
 test("shebang should be present for CLI usage", async () => {
   // Import fs directly to bypass any mocks
-  const { readFileSync, existsSync, statSync } = await import("node:fs");
+  const { readFileSync, existsSync } = await import("node:fs");
   const { resolve } = await import("node:path");
   const filePath = resolve("dist/index.js");
 
-  // Debug: Check if file exists and get stats
-  console.log("=== SHEBANG TEST DEBUG ===");
-  console.log("File path:", filePath);
-  console.log("File exists:", existsSync(filePath));
 
   if (existsSync(filePath)) {
-    const stats = statSync(filePath);
-    console.log("File size:", stats.size);
-    console.log("Last modified:", stats.mtime);
-
     const content = readFileSync(filePath, "utf-8");
     const lines = content.split("\n").slice(0, 1);
     const firstLine = lines[0];
