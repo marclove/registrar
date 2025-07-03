@@ -1,11 +1,15 @@
 import { describe, it, expect } from 'bun:test';
 
+interface RunAppOptions {
+  messageOnly?: boolean;
+}
+
 describe('message-only functionality', () => {
   it('should accept messageOnly option in runApp interface', () => {
     // Test the interface type checking
-    const optionsMessageOnly = { messageOnly: true };
-    const optionsNormal = { messageOnly: false };
-    const optionsDefault = {};
+    const optionsMessageOnly: RunAppOptions = { messageOnly: true };
+    const optionsNormal: RunAppOptions = { messageOnly: false };
+    const optionsDefault: RunAppOptions = {};
     
     expect(optionsMessageOnly.messageOnly).toBe(true);
     expect(optionsNormal.messageOnly).toBe(false);
@@ -14,10 +18,10 @@ describe('message-only functionality', () => {
 
   it('should handle command line argument parsing', () => {
     // Test argument parsing logic
-    const args1 = ['--message-only'];
-    const args2 = ['--no-commit'];
-    const args3 = ['--other-flag'];
-    const args4 = [];
+    const args1: string[] = ['--message-only'];
+    const args2: string[] = ['--no-commit'];
+    const args3: string[] = ['--other-flag'];
+    const args4: string[] = [];
     
     const messageOnly1 = args1.includes('--no-commit') || args1.includes('--message-only');
     const messageOnly2 = args2.includes('--no-commit') || args2.includes('--message-only');

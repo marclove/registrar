@@ -187,7 +187,7 @@ Commit message: feat(components): add new Button component with accessibility fe
    ```bash
    # Make sure you have staged changes first
    git add .
-   
+
    # Verify you have staged changes
    git diff --cached
    ```
@@ -229,17 +229,16 @@ For maintainers, here's how to publish new versions to npm:
    ```bash
    bun test
    bun run lint
-   bun run typecheck
    ```
 
 2. **Update version in package.json**:
    ```bash
    # For patch releases (bug fixes)
    npm version patch
-   
+
    # For minor releases (new features)
    npm version minor
-   
+
    # For major releases (breaking changes)
    npm version major
    ```

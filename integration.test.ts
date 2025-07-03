@@ -1,6 +1,6 @@
-import { expect, test, beforeEach, afterEach } from "bun:test";
+import { expect, test } from "bun:test";
 import { spawn } from "node:child_process";
-import { writeFileSync, unlinkSync, existsSync } from "node:fs";
+const { writeFileSync, unlinkSync, existsSync } = require("fs");
 
 interface TestResult {
   code: number;
@@ -9,20 +9,6 @@ interface TestResult {
 }
 
 const testConfigFile = 'test-config.toml';
-
-beforeEach(() => {
-  // Clean up any existing test config
-  if (existsSync(testConfigFile)) {
-    unlinkSync(testConfigFile);
-  }
-});
-
-afterEach(() => {
-  // Clean up test config
-  if (existsSync(testConfigFile)) {
-    unlinkSync(testConfigFile);
-  }
-});
 
 test("built index.js should require staged changes", async () => {
   // First build the project
@@ -140,4 +126,8 @@ prompt = "Test prompt: \${diff}"
 
   // Should attempt to use the config (will fail due to invalid API key, but config should be loaded)
   expect(result.stderr).not.toContain("You must provide a diff as a command-line argument");
+
+  if (existsSync(testConfigFile)) {
+    unlinkSync(testConfigFile);
+  }
 });

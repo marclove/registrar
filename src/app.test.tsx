@@ -1,7 +1,19 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  mock,
+  spyOn,
+  test,
+} from "bun:test";
 import React from "react";
+import * as message from "./message.js";
 
 describe("runApp", () => {
+  const mockCommitMessage = mock(() => Promise.resolve("feat: add new feature"));
+  let commitMessageSpy: ReturnType<typeof spyOn>;
+
   // Mock modules for runApp tests
   mock.module("ink", () => ({
     Text: (
@@ -24,10 +36,6 @@ describe("runApp", () => {
     commit: mock(() => Promise.resolve()),
   };
 
-  const mockCommitMessage = mock(() =>
-    Promise.resolve("feat: add new feature")
-  );
-
   // Mock process.exit to prevent tests from actually exiting
   const originalExit = process.exit;
   const mockExit = mock((_code?: number) => {});
@@ -44,6 +52,11 @@ describe("runApp", () => {
     process.exit = mockExit as any;
     global.setTimeout = mockSetTimeout as any;
 
+    // Spy on the default export of message.js
+    commitMessageSpy = spyOn(message, "default").mockImplementation(
+      mockCommitMessage,
+    );
+
     // Clear all mocks
     mockGit.diff.mockClear();
     mockGit.commit.mockClear();
@@ -55,15 +68,13 @@ describe("runApp", () => {
     mock.module("simple-git", () => ({
       default: () => mockGit,
     }));
-
-    mock.module("./message.js", () => ({
-      default: mockCommitMessage,
-    }));
   });
 
   afterEach(() => {
     process.exit = originalExit;
     global.setTimeout = originalSetTimeout;
+    // Restore the original implementation
+    commitMessageSpy.mockRestore();
     mock.restore();
   });
 
@@ -100,6 +111,7 @@ describe("runApp", () => {
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     expect(mockCommitMessage).not.toHaveBeenCalled();
     expect(mockGit.commit).not.toHaveBeenCalled();
+
     expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 1000);
     expect(mockExit).toHaveBeenCalledWith(1);
   });

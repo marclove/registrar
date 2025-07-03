@@ -12,8 +12,7 @@ Registrar is an AI-powered commit message generator that creates Conventional Co
 
 - **index.ts**: Main CLI entry point and orchestrator with command-line argument parsing for message-only mode
 - **app.tsx**: React-based application logic with git integration, CLI rendering, and dual-mode support
-- **message.ts**: Core message generation logic with AI provider integration
-- **providers.ts**: Dynamic provider loading system supporting 13+ AI services
+- **message.ts**: Core message generation logic with AI provider integration- **providers.ts**: Dynamic provider loading system supporting 13+ AI services
 - **config.ts**: Configuration management with TOML support and type-safe defaults
 - **cli.tsx**: React component for CLI interface with ink for progress indicators and status messages
 
@@ -39,7 +38,6 @@ bun test
 
 # Type checking and linting
 bun run lint
-bun run typecheck
 
 # Build for testing (includes all dependencies)
 bun run build:test
@@ -171,7 +169,7 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 ## Code Quality and Linting
 
 - **Type Checking**: Uses Bun's native TypeScript support with `bun --bun tsc --noEmit`
-- **Linting Scripts**: `bun run lint` and `bun run typecheck` for code quality checks
+- **Linting Scripts**: `bun run lint` for code quality checks
 - **No External Linters**: Leverages Bun's built-in capabilities instead of ESLint/Prettier
 - **Build Validation**: TypeScript compilation catches type errors during build process
 

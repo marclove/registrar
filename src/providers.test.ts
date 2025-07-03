@@ -5,8 +5,8 @@ import {
   factoryNames,
   loadProviderPackage,
   providers,
-} from "./dist/providers.js";
-import type { ProviderName } from "./providers.ts";
+} from "./providers.js";
+import type { ProviderName } from "./providers.js";
 
 // Mock process.env
 const originalEnv = process.env;
@@ -15,9 +15,7 @@ beforeEach(() => {
   process.env = { ...originalEnv };
 });
 
-afterEach(() => {
-  process.env = originalEnv;
-});
+
 
 test("providers array should contain expected providers", () => {
   expect(providers).toBeTruthy();

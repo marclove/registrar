@@ -1,15 +1,8 @@
-import { expect, test, beforeEach, afterEach } from "bun:test";
-import { existsSync, writeFileSync, unlinkSync } from "node:fs";
+import { expect, test } from "bun:test";
+import { existsSync, writeFileSync, unlinkSync } from "fs";
 import { defaultConfig, defaultPrompt, type RuntimeConfig, type TomlConfigSchema } from "./config.js";
 
 const testConfigPath = "test-config.toml";
-
-afterEach(() => {
-  // Clean up test config file
-  if (existsSync(testConfigPath)) {
-    unlinkSync(testConfigPath);
-  }
-});
 
 test("defaultConfig should have correct structure", () => {
   expect(defaultConfig).toBeTruthy();
