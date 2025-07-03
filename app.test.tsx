@@ -117,8 +117,8 @@ describe("runApp", () => {
     expect(mockExit).toHaveBeenCalledWith(1);
   });
 
-  test("runApp handles commit message generation error", async () => {
-    // Mock successful diff but failed message generation
+  test("runApp handles commit message generation error with retries", async () => {
+    // Mock successful diff but failed message generation for all attempts
     mockGit.diff.mockResolvedValue("mock diff content");
     mockCommitMessage.mockRejectedValue(new Error("API error"));
 
@@ -127,10 +127,55 @@ describe("runApp", () => {
     await runApp();
 
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    // Should be called 3 times (max attempts)
+    expect(mockCommitMessage).toHaveBeenCalledTimes(3);
     expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
     expect(mockGit.commit).not.toHaveBeenCalled();
     expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
     expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  test("runApp succeeds on second attempt after initial failure", async () => {
+    // Mock successful diff, failed first attempt, successful second attempt
+    mockGit.diff.mockResolvedValue("mock diff content");
+    mockCommitMessage
+      .mockRejectedValueOnce(new Error("First attempt failed"))
+      .mockResolvedValueOnce("feat: add new feature");
+    mockGit.commit.mockResolvedValue(undefined);
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    // Should be called twice (first fails, second succeeds)
+    expect(mockCommitMessage).toHaveBeenCalledTimes(2);
+    expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
+    expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 1500);
+    expect(mockExit).toHaveBeenCalledWith(0);
+  });
+
+  test("runApp succeeds on third attempt after two failures", async () => {
+    // Mock successful diff, two failed attempts, successful third attempt
+    mockGit.diff.mockResolvedValue("mock diff content");
+    mockCommitMessage
+      .mockRejectedValueOnce(new Error("First attempt failed"))
+      .mockRejectedValueOnce(new Error("Second attempt failed"))
+      .mockResolvedValueOnce("feat: add new feature");
+    mockGit.commit.mockResolvedValue(undefined);
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    // Should be called three times (first two fail, third succeeds)
+    expect(mockCommitMessage).toHaveBeenCalledTimes(3);
+    expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
+    expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 1500);
+    expect(mockExit).toHaveBeenCalledWith(0);
   });
 
   test("runApp handles git commit error", async () => {

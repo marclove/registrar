@@ -22,10 +22,55 @@ export async function runApp() {
       return;
     }
 
-    // Update to generating status
-    rerender(<Cli status="generating" />);
+    // Retry logic for commit message generation
+    const maxAttempts = 3;
+    let attempt = 1;
+    let msg: string | null = null;
+    let lastError: Error | null = null;
 
-    const msg = await commitMessage(diff);
+    while (attempt <= maxAttempts && !msg) {
+      try {
+        // Update status based on attempt number
+        if (attempt === 1) {
+          rerender(<Cli status="generating" />);
+        } else {
+          rerender(<Cli
+            status="retrying"
+            attempt={attempt}
+            maxAttempts={maxAttempts}
+          />);
+        }
+
+        msg = await commitMessage(diff);
+
+        // If we get here, generation was successful
+        break;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (attempt === maxAttempts) {
+          // This was the final attempt, break out of the loop
+          break;
+        }
+
+        // Wait a bit before retrying to avoid hitting rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempt++;
+      }
+    }
+
+    // Check if we successfully generated a message
+    if (!msg) {
+      const errorMessage = lastError?.message || "Unknown error occurred";
+      rerender(
+        <Cli
+          status="error"
+          error={`Failed to generate commit message after ${maxAttempts} attempts. Last error: ${errorMessage}`}
+        />,
+      );
+      setTimeout(() => process.exit(1), 2000);
+      return;
+    }
 
     // Update to committing status and show the message
     rerender(<Cli status="committing" message={`Commit message: ${msg}`} />);
@@ -45,7 +90,7 @@ export async function runApp() {
     rerender(
       <Cli
         status="error"
-        error={`Error generating commit message: ${errorMessage}`}
+        error={`Error: ${errorMessage}`}
       />,
     );
 
