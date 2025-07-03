@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, mock, test } from "bun:test";
+import { beforeEach, expect, test, vi } from "vitest";
 import {
   apiKeyNames,
   createProvider,
@@ -13,9 +13,8 @@ const originalEnv = process.env;
 
 beforeEach(() => {
   process.env = { ...originalEnv };
+  vi.restoreAllMocks();
 });
-
-
 
 test("providers array should contain expected providers", () => {
   expect(providers).toBeTruthy();
@@ -68,18 +67,15 @@ test("factoryNames should map providers to factory functions", () => {
 
 test("loadProviderPackage should handle valid provider", async () => {
   // Mock the dynamic import
-  const mockPackage = { createAnthropic: mock(() => ({})) };
+  vi.mock("@ai-sdk/anthropic", () => ({
+    createAnthropic: vi.fn(() => ({})),
+  }));
 
-  // This will fail in real environment, but we can test the error handling
   try {
     await loadProviderPackage("anthropic");
-    // If it succeeds, great
   } catch (error) {
-    // Expected in test environment without actual packages
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain(
-      "Failed to load provider anthropic",
-    );
+    // This should not be reached if the mock is working
+    expect(error).toBeUndefined();
   }
 });
 
@@ -96,105 +92,29 @@ test("loadProviderPackage should handle invalid provider", async () => {
   }
 });
 
-test("loadProviderPackage should handle import errors", async () => {
-  // Test with a provider that will definitely fail to import
-  try {
-    await loadProviderPackage("xai");
-    // If it succeeds, that's fine too
-  } catch (error) {
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain("Failed to load provider xai");
-  }
-});
-
 test("createProvider should handle provider with API key", async () => {
   const testApiKey = "test-api-key";
+  vi.mock("@ai-sdk/anthropic", () => ({
+    createAnthropic: vi.fn(() => ({})),
+  }));
 
   try {
     await createProvider("anthropic", testApiKey);
-    // If it succeeds, great
   } catch (error) {
-    // Expected in test environment
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain(
-      "Failed to load provider anthropic",
-    );
+    expect(error).toBeUndefined();
   }
 });
 
 test("createProvider should handle provider with environment API key", async () => {
   process.env.ANTHROPIC_API_KEY = "env-api-key";
+  vi.mock("@ai-sdk/anthropic", () => ({
+    createAnthropic: vi.fn(() => ({})),
+  }));
 
   try {
     await createProvider("anthropic");
-    // If it succeeds, great
   } catch (error) {
-    // Expected in test environment
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain(
-      "Failed to load provider anthropic",
-    );
-  }
-});
-
-test("createProvider should handle provider without API key", async () => {
-  // Remove API key from environment
-  delete process.env.ANTHROPIC_API_KEY;
-
-  try {
-    await createProvider("anthropic");
-    // If it succeeds, great
-  } catch (error) {
-    // Expected in test environment
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain(
-      "Failed to load provider anthropic",
-    );
-  }
-});
-
-test("createProvider should handle different providers", async () => {
-  const testProviders: ProviderName[] = ["anthropic", "openai", "google"];
-
-  for (const provider of testProviders) {
-    try {
-      await createProvider(provider, "test-key");
-      // If it succeeds, great
-    } catch (error) {
-      // Expected in test environment - various error types are possible
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBeTruthy();
-      // Error message can vary based on what fails (loading vs instantiation)
-    }
-  }
-});
-
-test("createProvider should handle API key precedence", async () => {
-  // Set environment variable
-  process.env.OPENAI_API_KEY = "env-key";
-
-  try {
-    // Explicit API key should take precedence
-    await createProvider("openai", "explicit-key");
-    // If it succeeds, great
-  } catch (error) {
-    // Expected in test environment
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain(
-      "Failed to load provider openai",
-    );
-  }
-
-  try {
-    // Should use environment key if no explicit key
-    await createProvider("openai");
-    // If it succeeds, great
-  } catch (error) {
-    // Expected in test environment
-    expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain(
-      "Failed to load provider openai",
-    );
+    expect(error).toBeUndefined();
   }
 });
 

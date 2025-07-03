@@ -9,6 +9,4 @@ async function main() {
   await runApp({ messageOnly });
 }
 
-if (import.meta.main) {
-  main();
-}
+main();

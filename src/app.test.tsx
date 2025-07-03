@@ -3,49 +3,62 @@ import {
   beforeEach,
   describe,
   expect,
-  mock,
-  spyOn,
+  vi,
   test,
-} from "bun:test";
+} from "vitest";
 import React from "react";
 import * as message from "./message.js";
+import { render } from "ink";
+import simpleGit from "simple-git";
+
+vi.mock('ink', async () => {
+  const actual = await vi.importActual('ink');
+  return {
+    ...actual,
+    render: vi.fn(() => ({
+      rerender: vi.fn(),
+      unmount: vi.fn(),
+      lastFrame: vi.fn(),
+    })),
+  };
+});
+
+const mockGit = {
+  diff: vi.fn(() => Promise.resolve("mock diff content")),
+  commit: vi.fn(() => Promise.resolve()),
+};
+
+vi.mock("simple-git", () => ({
+  default: () => mockGit,
+}));
 
 describe("runApp", () => {
-  const mockCommitMessage = mock(() => Promise.resolve("feat: add new feature"));
-  let commitMessageSpy: ReturnType<typeof spyOn>;
+  const mockCommitMessage = vi.fn(() => Promise.resolve("feat: add new feature"));
+  let commitMessageSpy: ReturnType<typeof vi.spyOn>;
 
   // Mock modules for runApp tests
-  mock.module("ink", () => ({
-    Text: (
-      { children, color }: { children: React.ReactNode; color?: string },
-    ) => children,
-    Box: ({ children }: { children: React.ReactNode }) => children,
-  }));
-
-  mock.module("ink-spinner", () => ({
+  vi.mock("ink-spinner", () => ({
     default: () => "⠋",
   }));
 
-  mock.module("react", () => ({
-    ...React,
-    Fragment: ({ children }: { children: React.ReactNode }) => children,
-  }));
-
-  const mockGit = {
-    diff: mock(() => Promise.resolve("mock diff content")),
-    commit: mock(() => Promise.resolve()),
-  };
+  vi.mock("react", async () => {
+    const actual = await vi.importActual("react");
+    return {
+      ...actual,
+      Fragment: ({ children }: { children: React.ReactNode }) => children,
+    };
+  });
 
   // Mock process.exit to prevent tests from actually exiting
   const originalExit = process.exit;
-  const mockExit = mock((_code?: number) => {});
+  const mockExit = vi.fn((_code?: number) => {});
 
   // Mock setTimeout to control timing
   const originalSetTimeout = setTimeout;
-  const mockSetTimeout = mock((callback: Function, delay?: number) => {
+  const mockSetTimeout = vi.fn((callback: Function, delay?: number) => {
     // Execute callback immediately for testing
     callback();
-    return 1;
+    return 1 as unknown as NodeJS.Timeout;
   });
 
   beforeEach(() => {
@@ -53,7 +66,7 @@ describe("runApp", () => {
     global.setTimeout = mockSetTimeout as any;
 
     // Spy on the default export of message.js
-    commitMessageSpy = spyOn(message, "default").mockImplementation(
+    commitMessageSpy = vi.spyOn(message, "default").mockImplementation(
       mockCommitMessage,
     );
 
@@ -63,11 +76,7 @@ describe("runApp", () => {
     mockCommitMessage.mockClear();
     mockExit.mockClear();
     mockSetTimeout.mockClear();
-
-    // Mock modules
-    mock.module("simple-git", () => ({
-      default: () => mockGit,
-    }));
+    (render as any).mockClear();
   });
 
   afterEach(() => {
@@ -75,7 +84,7 @@ describe("runApp", () => {
     global.setTimeout = originalSetTimeout;
     // Restore the original implementation
     commitMessageSpy.mockRestore();
-    mock.restore();
+    vi.restoreAllMocks();
   });
 
   test("app module should export runApp function", async () => {
@@ -93,6 +102,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
     expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
@@ -108,6 +118,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     expect(mockCommitMessage).not.toHaveBeenCalled();
     expect(mockGit.commit).not.toHaveBeenCalled();
@@ -124,6 +135,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
     expect(mockExit).toHaveBeenCalledWith(1);
@@ -138,6 +150,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     // Should be called 3 times (max attempts)
     expect(mockCommitMessage).toHaveBeenCalledTimes(3);
@@ -159,6 +172,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     // Should be called twice (first fails, second succeeds)
     expect(mockCommitMessage).toHaveBeenCalledTimes(2);
@@ -181,6 +195,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     // Should be called three times (first two fail, third succeeds)
     expect(mockCommitMessage).toHaveBeenCalledTimes(3);
@@ -200,6 +215,7 @@ describe("runApp", () => {
 
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
     expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
     expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
@@ -213,6 +229,7 @@ describe("runApp", () => {
     const { runApp } = await import("./app.js");
     await runApp();
 
+    expect(render).toHaveBeenCalled();
     expect(mockExit).toHaveBeenCalledWith(1);
     expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
   });

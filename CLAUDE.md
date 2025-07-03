@@ -27,39 +27,22 @@ Registrar is an AI-powered commit message generator that creates Conventional Co
 - **Snake/Camel Case Conversion**: Automatic conversion between TOML snake_case and TypeScript camelCase
 - **Comprehensive Testing**: Full test coverage with unit, integration, and UI testing strategies
 
-## Development Commands
-
-```bash
-# Build the project
-bun run build
-
-# Run tests
-bun test
-
-# Type checking and linting
-bun run lint
-
-# Build for testing (includes all dependencies)
-bun run build:test
-
-# Prepare for publishing
-bun run prepublishOnly
-```
 
 ## Testing
 
-- Uses Bun's built-in test runner with `ink-testing-library` for React component testing
-- Integration tests require valid `ANTHROPIC_API_KEY`
+- Uses Vitest as the test runner with `ink-testing-library` for React component testing
+- API integration tests are separated into their own file (`integration-api.test.ts`) and require explicit execution
+- Regular integration tests run build verification and basic CLI functionality without API calls
 - Tests cover CLI argument handling, config loading, build verification, and React UI components
 - Comprehensive test coverage achieved: ~90% overall, 100% for core modules
-- Timer increment testing limited by Bun's current timer mocking capabilities
-- Run `bun test` for full test suite (80+ tests across 8 files)
+- Timer increment testing works well with Vitest's timer mocking capabilities
 
 ### Test Files
 - `cli.test.tsx`: React component rendering and status transitions
 - `app.test.tsx`: Application logic, React UI testing, and module exports
 - `index.test.ts`: Entry point module structure
-- `integration.test.ts`: Built executable and configuration loading
+- `integration.test.ts`: Built executable and basic CLI functionality (no API calls)
+- `integration-api.test.ts`: API integration tests requiring valid API key (run separately)
 - `message.test.ts`: Core message generation functionality with 100% coverage
 - `config.test.ts`: Configuration management and type system validation
 - `providers.test.ts`: Provider loading and factory functions
@@ -67,10 +50,11 @@ bun run prepublishOnly
 
 ### Test Coverage Strategy
 - **Unit Tests**: Individual functions and components with comprehensive mocking
-- **Integration Tests**: Real CLI execution and git integration
+- **Integration Tests**: Real CLI execution and git integration (separated by API usage)
+- **API Tests**: Separate test file for full end-to-end API integration (`npm run test:integration`)
 - **UI Tests**: React component behavior using `ink-testing-library`
 - **Error Path Testing**: All failure scenarios and edge cases covered
-- **Mock Strategy**: Extensive use of Bun's `mock.module()` for dependency isolation
+- **Mock Strategy**: Extensive use of Vitest's `vi.mock()` for dependency isolation
 
 ## Configuration
 
@@ -113,12 +97,14 @@ api_key_name = "OPENAI_API_KEY"
 
 ## Build Process
 
-The build process uses Bun with extensive externalization of AI SDK packages to keep the bundle size manageable. All TypeScript files (`index.ts`, `message.ts`, `cli.tsx`, `app.tsx`) are built separately with appropriate external dependencies for React, ink, and AI SDKs.
+The build process uses Vite with server-side rendering (SSR) mode to properly handle Node.js built-ins and external dependencies. All TypeScript files (`index.ts`, `message.ts`, `cli.tsx`, `app.tsx`) are built with appropriate externalization for Node.js modules.
 
 ### Key Build Considerations
-- React and ink dependencies are externalized to keep bundle size down
-- TSX files are compiled to JS while maintaining proper module imports
+- Vite SSR mode ensures proper Node.js compatibility for CLI usage
+- Node.js built-ins are properly aliased to avoid browser externalization issues
+- TypeScript files are compiled to ES modules while maintaining proper module imports
 - The build output maintains npx compatibility through index.js entry point
+- Custom externalization function handles Node.js-specific dependencies correctly
 
 ## CLI Usage Modes
 
@@ -168,9 +154,6 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 
 ## Code Quality and Linting
 
-- **Type Checking**: Uses Bun's native TypeScript support with `bun --bun tsc --noEmit`
-- **Linting Scripts**: `bun run lint` for code quality checks
-- **No External Linters**: Leverages Bun's built-in capabilities instead of ESLint/Prettier
 - **Build Validation**: TypeScript compilation catches type errors during build process
 
 ## Message Generation Implementation

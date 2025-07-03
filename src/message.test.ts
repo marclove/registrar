@@ -1,37 +1,31 @@
-import { afterEach, beforeEach, expect, mock, test, spyOn } from "bun:test";
-import { spawn } from "node:child_process";
+import { afterEach, beforeEach, expect, vi, test } from "vitest";
+import { execa } from "execa";
 import * as providersModule from "./providers.js";
 
-interface TestResult {
-  code: number;
-  stdout?: string;
-  stderr: string;
-}
-
 // Mock modules and dependencies
-const mockExistsSync = mock(() => false);
-const mockReadFileSync = mock(() => "");
-const mockConsoleError = mock(() => {});
-const mockConsoleDebug = mock(() => {});
-const mockLanguageModel = mock(() => ({ test: "model" }));
-const mockTextEmbeddingModel = mock(() => ({ test: "embedding_model" }));
-const mockCreateProvider = mock(() =>
+const mockExistsSync = vi.fn(() => false);
+const mockReadFileSync = vi.fn(() => "");
+const mockConsoleError = vi.fn(() => {});
+const mockConsoleDebug = vi.fn(() => {});
+const mockLanguageModel = vi.fn(() => ({ test: "model" }));
+const mockTextEmbeddingModel = vi.fn(() => ({ test: "embedding_model" }));
+const mockCreateProvider = vi.fn(() =>
   Promise.resolve({
     languageModel: mockLanguageModel,
     textEmbeddingModel: mockTextEmbeddingModel,
   }),
 );
-const mockGenerateObject = mock(() =>
+const mockGenerateObject = vi.fn(() =>
   Promise.resolve({ object: { commit_message: "test: mock commit" } }),
 );
-const mockParse = mock(() => ({}));
-const mockProcessExit = mock(() => {});
+const mockParse = vi.fn(() => ({}));
+const mockProcessExit = vi.fn(() => {});
 
 // Store originals
 const originalProcessExit = process.exit;
 const originalConsoleError = console.error;
 const originalConsoleDebug = console.debug;
-let createProviderSpy: ReturnType<typeof spyOn>;
+let createProviderSpy: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   // Mock process.exit to prevent tests from actually exiting
@@ -40,7 +34,7 @@ beforeEach(() => {
   console.debug = mockConsoleDebug;
 
   // Spy on createProvider instead of mocking the whole module
-  createProviderSpy = spyOn(
+  createProviderSpy = vi.spyOn(
     providersModule,
     "createProvider",
   ).mockImplementation(mockCreateProvider as any);
@@ -58,16 +52,16 @@ beforeEach(() => {
   mockProcessExit.mockClear();
 
   // Set up module mocks
-  mock.module("node:fs", () => ({
+  vi.mock("node:fs", () => ({
     existsSync: mockExistsSync,
     readFileSync: mockReadFileSync,
   }));
 
-  mock.module("ai", () => ({
+  vi.mock("ai", () => ({
     generateObject: mockGenerateObject,
   }));
 
-  mock.module("@iarna/toml", () => ({
+  vi.mock("@iarna/toml", () => ({
     parse: mockParse,
   }));
 });
@@ -79,65 +73,7 @@ afterEach(() => {
 
   // Restore the spy and other mocks
   createProviderSpy.mockRestore();
-  mock.restore();
-});
-
-// Integration tests
-test("script should require a diff argument", async () => {
-  const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["src/message.ts"], { stdio: "pipe" });
-    let stderr = "";
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stderr });
-    });
-  });
-
-  expect(result.code).toBe(1);
-  expect(result.stderr).toContain(
-    "You must provide a diff as a command-line argument",
-  );
-});
-
-test("built message script should be executable and require diff argument", async () => {
-  // First build the project
-  const buildResult = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["run", "build"], { stdio: "pipe" });
-    let stderr = "";
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stderr });
-    });
-  });
-
-  expect(buildResult.code).toBe(0);
-
-  // Then test the built script (message.js in isolation)
-  const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("node", ["dist/message.js"], { stdio: "pipe" });
-    let stderr = "";
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stderr });
-    });
-  });
-
-  expect(result.code).toBe(1);
-  expect(result.stderr).toContain(
-    "You must provide a diff as a command-line argument",
-  );
+  vi.restoreAllMocks();
 });
 
 test.skipIf(!process.env.RUN_INTEGRATION_TESTS)(
@@ -151,33 +87,16 @@ test.skipIf(!process.env.RUN_INTEGRATION_TESTS)(
 
     const testDiff = `diff --git a/src/utils.ts b/src/utils.ts\nindex 1234567..abcdefg 100644\n--- a/src/utils.ts\n+++ b/src/utils.ts\n@@ -1,3 +1,6 @@\n+export function add(a: number, b: number): number {\n+  return a + b;\n+}\n+\n export function multiply(x: number, y: number): number {\n   return x * y;\n }`;
 
-    // Test with TypeScript source directly since dependencies are available
-    const result = await new Promise<TestResult>((resolve) => {
-      const child = spawn("bun", ["src/message.ts", testDiff], {
-        stdio: "pipe",
-        env: { ...process.env, ANTHROPIC_API_KEY: apiKey },
-      });
-      let stdout = "";
-      let stderr = "";
-
-      child.stdout.on("data", (data) => {
-        stdout += data.toString();
-      });
-
-      child.stderr.on("data", (data) => {
-        stderr += data.toString();
-      });
-
-      child.on("close", (code) => {
-        resolve({ code: code || 0, stdout, stderr });
-      });
+    const result = await execa("node", ["dist/message.js", testDiff], {
+      env: { ...process.env, ANTHROPIC_API_KEY: apiKey },
+      reject: false,
     });
 
-    if (result.code !== 0) {
+    if (result.exitCode !== 0) {
       console.log("Integration test failed with stderr:", result.stderr);
       console.log("stdout:", result.stdout);
     }
-    expect(result.code).toBe(0);
+    expect(result.exitCode).toBe(0);
     expect(result.stdout?.trim()).toBeTruthy();
     expect(result.stdout).toContain("feat");
     expect(result.stderr).toBe("");
@@ -418,64 +337,6 @@ test("generateCommit should trim commit message", async () => {
   const result = await messageModule.default("test diff");
 
   expect(result).toBe("feat: add feature");
-});
-
-test("CLI should handle missing diff argument", async () => {
-  // Test the CLI argument handling by spawning the script
-  const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["src/message.ts"], { stdio: "pipe" });
-    let stderr = "";
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stderr });
-    });
-  });
-
-  expect(result.code).toBe(1);
-  expect(result.stderr).toContain(
-    "You must provide a diff as a command-line argument",
-  );
-});
-
-test("CLI should process diff argument when provided", async () => {
-  // Mock successful generation
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test: cli commit" },
-  });
-
-  const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["src/message.ts", "test diff"], {
-      stdio: "pipe",
-      env: { ...process.env, ANTHROPIC_API_KEY: "test-key" },
-    });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stdout, stderr });
-    });
-  });
-
-  // Will likely fail due to mocking complexities in child process, but tests the code path
-  expect(result.stderr).not.toContain(
-    "You must provide a diff as a command-line argument",
-  );
 });
 
 test("module should export main function as default", async () => {

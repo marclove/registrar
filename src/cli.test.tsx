@@ -1,61 +1,43 @@
-import { expect, test, mock } from 'bun:test';
+import { expect, test, vi } from 'vitest';
 import Cli from './cli.js';
 import React from 'react';
+import { render } from 'ink-testing-library';
 
-mock.module('ink', () => ({
-  render: (tree: React.ReactElement) => {
-    return {
-      lastFrame: () => "mocked frame",
-      rerender: (newTree: React.ReactElement) => {},
-      unmount: () => {},
-    };
-  },
-  Box: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Text: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
-}));
-
-mock.module('ink-spinner', () => ({
+vi.mock('ink-spinner', () => ({
     default: () => '<Spinner />',
 }));
 
 test('should render checking status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="checking" />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Checking for staged changes...');
 });
 
 test('should render success status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="success" />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Committed successfully!');
 });
 
 test('should render error status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="error" error="Test Error" />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Test Error');
 });
 
 test('should render message-only status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="message-only" message="Test Message" />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Test Message');
 });
 
 test('should render generating status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="generating" />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Generating commit message...');
 });
 
 test('should render retrying status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="retrying" attempt={2} maxAttempts={3} />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Retrying commit message generation (attempt 2/3)...');
 });
 
 test('should render committing status', () => {
-  const { render } = require('ink');
   const { lastFrame } = render(<Cli status="committing" />);
-  expect(lastFrame()).toBe('mocked frame');
+  expect(lastFrame()).toContain('Committing changes...');
 });

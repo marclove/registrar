@@ -1,15 +1,5 @@
-import { mock } from 'bun:test';
+import { vi } from 'vitest';
 
-mock.module('ink-spinner', () => ({
+vi.mock('ink-spinner', () => ({
   default: () => 'Spinner',
-}));
-
-mock.module('ink', () => ({
-  render: () => ({
-    lastFrame: () => 'mocked frame',
-    rerender: () => {},
-    unmount: () => {},
-  }),
-  Box: ({ children }: { children: React.ReactNode }) => children,
-  Text: ({ children }: { children: React.ReactNode }) => children,
 }));

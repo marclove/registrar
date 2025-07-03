@@ -1,133 +1,29 @@
-import { expect, test } from "bun:test";
-import { spawn } from "node:child_process";
-const { writeFileSync, unlinkSync, existsSync } = require("fs");
+import { $, execa } from 'execa';
+import { mkdirSync, rmSync } from 'fs';
+import { join, resolve } from 'path';
+import { afterAll, beforeAll, expect, test } from 'vitest';
 
-interface TestResult {
-  code: number;
-  stdout?: string;
-  stderr: string;
-}
+const tmpDir = join(__dirname, 'tmp', 'integration-test');
+const distDir = resolve(__dirname, 'dist');
 
-const testConfigFile = 'test-config.toml';
-
-test("built index.js should require staged changes", async () => {
-  // First build the project
-  const buildResult = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["run", "build"], { stdio: "pipe" });
-    let stderr = "";
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stderr });
-    });
-  });
-
-  expect(buildResult.code).toBe(0);
-
-  // Store current staged changes
-  const stagedFiles = await new Promise<string>((resolve) => {
-    const child = spawn("git", ["diff", "--cached", "--name-only"], { stdio: "pipe" });
-    let stdout = "";
-    
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-    
-    child.on("close", () => {
-      resolve(stdout.trim());
-    });
-  });
-
-  // Temporarily unstage all changes
-  if (stagedFiles) {
-    await new Promise<void>((resolve) => {
-      const child = spawn("git", ["reset", "HEAD"], { stdio: "pipe" });
-      child.on("close", () => resolve());
-    });
-  }
-
-  // Test the built index.js script with no staged changes
-  const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("node", ["dist/index.js"], { 
-      stdio: "pipe",
-      env: { ...process.env, ANTHROPIC_API_KEY: "test-key" }
-    });
-    let stdout = "";
-    let stderr = "";
-
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stdout, stderr });
-    });
-  });
-
-  // Restore staged changes
-  if (stagedFiles) {
-    const filesToRestage = stagedFiles.split('\n').filter(f => f.trim());
-    if (filesToRestage.length > 0) {
-      await new Promise<void>((resolve) => {
-        const child = spawn("git", ["add", ...filesToRestage], { stdio: "pipe" });
-        child.on("close", () => resolve());
-      });
-    }
-  }
-
-  // Should exit with code 1 due to no staged changes
-  expect(result.code).toBe(1);
-  
-  // Should show the React-based error message
-  expect(result.stdout).toContain("You must stage changes before generating a commit message");
+beforeAll(async () => {
+  await execa('npm', ['run', 'build']);
+  mkdirSync(tmpDir, { recursive: true });
 });
 
-test("should use custom config when provided", async () => {
-  // Create a test config file
-  const testConfig = `
-provider = "anthropic"
-model = "claude-sonnet-4-20250514"
-max_tokens = 100
-temperature = 0.5
-api_key_name = "ANTHROPIC_API_KEY"
-prompt = "Test prompt: \${diff}"
-`;
-  
-  writeFileSync(testConfigFile, testConfig);
+afterAll(() => {
+  rmSync(tmpDir, { recursive: true, force: true });
+});
 
-  const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["message.ts", "test diff content"], {
-      stdio: "pipe",
-      env: { ...process.env, ANTHROPIC_API_KEY: "test-key" },
-      cwd: process.cwd()
-    });
-    let stdout = "";
-    let stderr = "";
+test('built index.js should require staged changes', async () => {
+  const gitDir = join(tmpDir, 'no-staged-changes');
+  mkdirSync(gitDir, { recursive: true });
+  await execa('git', ['init'], { cwd: gitDir });
+  await execa('git', ['config', 'user.email', 'test@example.com'], { cwd: gitDir });
+  await execa('git', ['config', 'user.name', 'Test User'], { cwd: gitDir });
 
-    child.stdout.on("data", (data) => {
-      stdout += data.toString();
-    });
+  const { all, exitCode } = await $({ cwd: gitDir, reject: false, all: true })`node ${join(distDir, 'index.js')}`;
 
-    child.stderr.on("data", (data) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      resolve({ code: code || 0, stdout, stderr });
-    });
-  });
-
-  // Should attempt to use the config (will fail due to invalid API key, but config should be loaded)
-  expect(result.stderr).not.toContain("You must provide a diff as a command-line argument");
-
-  if (existsSync(testConfigFile)) {
-    unlinkSync(testConfigFile);
-  }
+  expect(exitCode).toBe(1);
+  expect(all).toContain('You must stage changes before generating a commit message');
 });

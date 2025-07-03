@@ -117,14 +117,4 @@ async function main(diff: string): Promise<string> {
   return await commitMessage(diff, config);
 }
 
-if (import.meta.main) {
-  const diff = process.argv[2];
-  if (!diff) {
-    console.error("You must provide a diff as a command-line argument.");
-    process.exit(1);
-  }
-  const msg = await main(diff);
-  console.log(msg);
-}
-
 export default main;

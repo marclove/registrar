@@ -173,6 +173,39 @@ Time elapsed: 2s
 Commit message: feat(components): add new Button component with accessibility features
 ```
 
+## Development
+
+### Building and Testing
+
+```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run tests (excludes API integration tests)
+npm test
+
+# Run API integration tests (requires valid API key)
+npm run test:integration
+
+# Run all tests (including API integration tests)
+npm run test:all
+
+# Type checking
+npm run lint
+```
+
+### Test Structure
+
+The project uses a two-tier testing approach:
+
+- **Regular Tests** (`npm test`): Unit tests, React component tests, and basic integration tests that don't require API keys
+- **API Integration Tests** (`npm run test:integration`): Full end-to-end tests that require valid API keys and test actual AI provider integration
+
+This separation allows for fast development cycles while ensuring comprehensive coverage when needed.
+
 ## Troubleshooting
 
 ### Common Issues
@@ -227,8 +260,9 @@ For maintainers, here's how to publish new versions to npm:
 
 1. **Ensure all tests pass**:
    ```bash
-   bun test
-   bun run lint
+   npm test
+   npm run test:integration  # Run API integration tests if needed
+   npm run lint
    ```
 
 2. **Update version in package.json**:
@@ -245,9 +279,7 @@ For maintainers, here's how to publish new versions to npm:
 
 3. **Build and publish**:
    ```bash
-   # The prepublishOnly script will automatically run 'bun run build'
-   bun publish
-   # OR use npm (both work the same)
+   # The prepublishOnly script will automatically run 'npm run build'
    npm publish
    ```
 
@@ -262,6 +294,6 @@ The npx functionality is already fully configured in `package.json`:
 - ✅ `"bin": { "registrar": "./dist/index.js" }` - enables `npx registrar`
 - ✅ `"main": "dist/index.js"` - sets the entry point
 - ✅ `"files": ["dist/"]` - includes built files in npm package
-- ✅ `"prepublishOnly": "bun run build"` - builds before publishing
+- ✅ `"prepublishOnly": "npm run build"` - builds before publishing
 
 No additional setup is needed for npx functionality - it works automatically once the package is published to npm.
