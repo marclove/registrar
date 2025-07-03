@@ -9,7 +9,7 @@ interface TestResult {
 
 test("script should require a diff argument", async () => {
   const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["index.ts"], { stdio: "pipe" });
+    const child = spawn("bun", ["message.ts"], { stdio: "pipe" });
     let stderr = "";
 
     child.stderr.on("data", (data) => {
@@ -23,14 +23,14 @@ test("script should require a diff argument", async () => {
 
   expect(result.code).toBe(1);
   expect(result.stderr).toContain(
-    "Please provide a diff as a command-line argument",
+    "You must provide a diff as a command-line argument",
   );
 });
 
 test("config loading should work with defaults", async () => {
   // Test that the config loads without errors when no config file exists
   const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["index.ts", "test diff"], {
+    const child = spawn("bun", ["message.ts", "test diff"], {
       stdio: "pipe",
       env: { ...process.env, ANTHROPIC_API_KEY: "test-key" },
     });
@@ -53,11 +53,11 @@ test("config loading should work with defaults", async () => {
   // Will fail due to invalid API key, but should not be exit code 1 (missing diff)
   // Exit code 1 is specifically for missing diff argument
   expect(result.stderr).not.toContain(
-    "Please provide a diff as a command-line argument",
+    "You must provide a diff as a command-line argument",
   );
 });
 
-test("built script should be executable", async () => {
+test("built message script should be executable and require diff argument", async () => {
   // First build the project
   const buildResult = await new Promise<TestResult>((resolve) => {
     const child = spawn("bun", ["run", "build"], { stdio: "pipe" });
@@ -74,9 +74,9 @@ test("built script should be executable", async () => {
 
   expect(buildResult.code).toBe(0);
 
-  // Then test the built script
+  // Then test the built script (message.js in isolation)
   const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("node", ["dist/index.js"], { stdio: "pipe" });
+    const child = spawn("node", ["dist/message.js"], { stdio: "pipe" });
     let stderr = "";
 
     child.stderr.on("data", (data) => {
@@ -90,7 +90,7 @@ test("built script should be executable", async () => {
 
   expect(result.code).toBe(1);
   expect(result.stderr).toContain(
-    "Please provide a diff as a command-line argument",
+    "You must provide a diff as a command-line argument",
   );
 });
 
@@ -116,7 +116,7 @@ index 1234567..abcdefg 100644
 
   // Test with TypeScript source directly since dependencies are available
   const result = await new Promise<TestResult>((resolve) => {
-    const child = spawn("bun", ["index.ts", testDiff], {
+    const child = spawn("bun", ["message.ts", testDiff], {
       stdio: "pipe",
       env: { ...process.env, ANTHROPIC_API_KEY: apiKey },
     });
