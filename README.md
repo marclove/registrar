@@ -220,3 +220,49 @@ MIT License - see LICENSE file for details.
 ## Contributing
 
 Contributions welcome! Please read CONTRIBUTING.md for guidelines.
+
+### Publishing to npm
+
+For maintainers, here's how to publish new versions to npm:
+
+1. **Ensure all tests pass**:
+   ```bash
+   bun test
+   bun run lint
+   bun run typecheck
+   ```
+
+2. **Update version in package.json**:
+   ```bash
+   # For patch releases (bug fixes)
+   npm version patch
+   
+   # For minor releases (new features)
+   npm version minor
+   
+   # For major releases (breaking changes)
+   npm version major
+   ```
+
+3. **Build and publish**:
+   ```bash
+   # The prepublishOnly script will automatically run 'bun run build'
+   bun publish
+   # OR use npm (both work the same)
+   npm publish
+   ```
+
+4. **Push the version tag**:
+   ```bash
+   git push origin main --tags
+   ```
+
+#### npx Functionality
+
+The npx functionality is already fully configured in `package.json`:
+- ✅ `"bin": { "registrar": "./dist/index.js" }` - enables `npx registrar`
+- ✅ `"main": "dist/index.js"` - sets the entry point
+- ✅ `"files": ["dist/"]` - includes built files in npm package
+- ✅ `"prepublishOnly": "bun run build"` - builds before publishing
+
+No additional setup is needed for npx functionality - it works automatically once the package is published to npm.
