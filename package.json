@@ -13,7 +13,7 @@
     "typescript": "^5"
   },
   "bin": {
-    "registrar": "./dist/index.js $(git diff --cached)"
+    "registrar": "./dist/index.js"
   },
   "type": "module",
   "files": [

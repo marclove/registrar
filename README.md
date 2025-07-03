@@ -1,26 +1,34 @@
 # Registrar
 
-AI-powered commit message generator that follows Conventional Commits specification.
+AI-powered commit message generator that follows Conventional Commits specification. Simply run `npx registrar` and it will automatically generate a commit message from your staged changes and commit them for you.
 
 ## Features
 
 - 🤖 AI-generated commit messages using multiple providers (Anthropic, OpenAI, Google, etc.)
 - 📝 Follows [Conventional Commits](https://www.conventionalcommits.org/) specification
 - ⚙️ Configurable via TOML file with custom prompts
-- 🔧 Easy integration with git hooks and Husky
+- 🔄 Automatic retry logic with visual progress indicators
+- 🎨 Rich terminal UI with real-time status updates and timers
 - 🚀 Zero-config usage with sensible defaults
+- ✨ Automatically commits your changes after generating the message
 
 ## Quick Start
 
 ### Using npx (Recommended)
 
 ```bash
-# Generate a commit message from git diff
-npx registrar "$(git diff --cached)"
+# Stage your changes
+git add .
 
-# Or pipe git diff directly
-git diff --cached | npx registrar
+# Generate commit message and commit automatically
+npx registrar
 ```
+
+That's it! Registrar will:
+1. ✅ Check for staged changes
+2. 🤖 Generate a commit message using AI
+3. 📝 Commit your changes with the generated message
+4. 🎉 Show you the result with a beautiful progress interface
 
 ### Installation
 
@@ -77,85 +85,15 @@ export GOOGLE_API_KEY="your-api-key"
 # ... etc
 ```
 
-## Git Hook Integration
+## Alternative: Git Hook Integration
+
+> **Note**: Since Registrar now handles committing automatically, you typically don't need git hooks. However, if you prefer to generate commit messages without auto-committing, you can still use git hooks with a message-only mode.
 
 ### Manual Setup (prepare-commit-msg hook)
 
-1. Create the hook file:
+If you want to use git hooks to generate commit messages without auto-committing, you would need to create a separate message-only version of the tool. The current version automatically commits after generating the message.
 
-```bash
-touch .git/hooks/prepare-commit-msg
-chmod +x .git/hooks/prepare-commit-msg
-```
-
-2. Add the following content to `.git/hooks/prepare-commit-msg`:
-
-```bash
-#!/bin/bash
-
-# Only run for commits (not merges, rebases, etc.)
-if [ "$2" = "message" ] || [ "$2" = "template" ] || [ "$2" = "merge" ] || [ "$2" = "squash" ]; then
-    exit 0
-fi
-
-# Get the staged diff
-DIFF=$(git diff --cached)
-
-# Only generate if there are staged changes
-if [ -n "$DIFF" ]; then
-    # Generate commit message using registrar
-    COMMIT_MSG=$(npx registrar "$DIFF" 2>/dev/null)
-    
-    # If generation was successful, use it
-    if [ $? -eq 0 ] && [ -n "$COMMIT_MSG" ]; then
-        echo "$COMMIT_MSG" > "$1"
-    fi
-fi
-```
-
-### Husky Setup
-
-If you're using [Husky](https://typicode.github.io/husky/) for git hooks:
-
-1. Install Husky (if not already installed):
-
-```bash
-npm install --save-dev husky
-npx husky install
-```
-
-2. Add the prepare-commit-msg hook:
-
-```bash
-npx husky add .husky/prepare-commit-msg 'npx registrar "$(git diff --cached)" > $1 2>/dev/null || true'
-```
-
-Or create `.husky/prepare-commit-msg` manually:
-
-```bash
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Only run for regular commits
-if [ "$2" = "message" ] || [ "$2" = "template" ] || [ "$2" = "merge" ] || [ "$2" = "squash" ]; then
-    exit 0
-fi
-
-# Generate commit message
-DIFF=$(git diff --cached)
-if [ -n "$DIFF" ]; then
-    COMMIT_MSG=$(npx registrar "$DIFF" 2>/dev/null)
-    if [ $? -eq 0 ] && [ -n "$COMMIT_MSG" ]; then
-        echo "$COMMIT_MSG" > "$1"
-    fi
-fi
-```
-
-3. Make it executable:
-
-```bash
-chmod +x .husky/prepare-commit-msg
-```
+For now, the recommended approach is to use `npx registrar` directly, which provides a better user experience with visual progress indicators and automatic commit handling.
 
 ## Usage Examples
 
@@ -165,11 +103,8 @@ chmod +x .husky/prepare-commit-msg
 # Stage your changes
 git add .
 
-# Generate commit message
-npx registrar "$(git diff --cached)"
-
-# Or commit directly (with git hook setup)
-git commit
+# Generate commit message and commit automatically
+npx registrar
 ```
 
 ### Custom Configuration
@@ -177,7 +112,7 @@ git commit
 ```bash
 # Use different provider
 echo 'provider = "openai"' > config.toml
-npx registrar "$(git diff --cached)"
+npx registrar
 
 # Use custom prompt
 cat > config.toml << EOF
@@ -187,19 +122,20 @@ Create a commit message for this diff: \${diff}
 Make it concise and professional.
 """
 EOF
+npx registrar
 ```
 
-### Integration with Git Workflow
+### Example Output
 
-```bash
-# 1. Stage your changes
-git add src/components/Button.tsx
+When you run `npx registrar`, you'll see a beautiful progress interface:
 
-# 2. Generate and commit (with hook)
-git commit
-
-# 3. The hook automatically generates a message like:
-# "feat(components): add new Button component with accessibility features"
+```
+⠋ Checking for staged changes...
+⠋ Generating commit message...
+Time elapsed: 2s
+⠋ Committing changes...
+✓ Committed successfully!
+Commit message: feat(components): add new Button component with accessibility features
 ```
 
 ## Troubleshooting
@@ -214,24 +150,33 @@ git commit
 
 2. **No Staged Changes**
    ```bash
-   # Make sure you have staged changes
+   # Make sure you have staged changes first
    git add .
+   
+   # Verify you have staged changes
    git diff --cached
    ```
 
-3. **Hook Not Running**
-   ```bash
-   # Check hook permissions
-   ls -la .git/hooks/prepare-commit-msg
-   # Should show executable permissions (-rwxr-xr-x)
+3. **Generation Failures**
+   Registrar automatically retries up to 3 times if generation fails. You'll see:
+   ```
+   ⠋ Retrying commit message generation (attempt 2/3)...
+   Previous attempt failed. Retrying... (1 failed attempts)
    ```
 
-### Debug Mode
+4. **Commit Failures**
+   If the commit fails, check that:
+   - You have write permissions to the repository
+   - You're in a git repository
+   - There are actually staged changes to commit
 
-```bash
-# Run with debug output
-DEBUG=1 npx registrar "$(git diff --cached)"
-```
+### Error Handling
+
+Registrar provides detailed error messages and visual feedback:
+- ✅ Green checkmark for success
+- ❌ Red X for errors
+- 🔄 Automatic retry with progress indicators
+- ⏱️ Real-time timer showing elapsed time
 
 ## License
 
