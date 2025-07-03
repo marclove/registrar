@@ -134,7 +134,7 @@ test("built message script should be executable and require diff argument", asyn
   );
 });
 
-test("integration test with real API key", async () => {
+test.skipIf(!process.env.RUN_INTEGRATION_TESTS)("integration test with real API key", async () => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey || apiKey.startsWith("test-") || apiKey === "test-key") {
     console.log("Skipping integration test - valid ANTHROPIC_API_KEY not set");
