@@ -1,0 +1,175 @@
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { render } from "ink-testing-library";
+import React from "react";
+import Cli from "./cli.js";
+
+describe("runApp", () => {
+  // Mock modules for runApp tests
+  mock.module("ink", () => ({
+    Text: (
+      { children, color }: { children: React.ReactNode; color?: string },
+    ) => children,
+    Box: ({ children }: { children: React.ReactNode }) => children,
+  }));
+
+  mock.module("ink-spinner", () => ({
+    default: () => "⠋",
+  }));
+
+  mock.module("react", () => ({
+    ...React,
+    Fragment: ({ children }: { children: React.ReactNode }) => children,
+  }));
+
+  const mockGit = {
+    diff: mock(() => Promise.resolve("mock diff content")),
+    commit: mock(() => Promise.resolve()),
+  };
+
+  const mockCommitMessage = mock(() =>
+    Promise.resolve("feat: add new feature")
+  );
+
+  // Mock process.exit to prevent tests from actually exiting
+  const originalExit = process.exit;
+  const mockExit = mock((_code?: number) => {});
+
+  // Mock setTimeout to control timing
+  const originalSetTimeout = setTimeout;
+  const mockSetTimeout = mock((callback: Function, delay?: number) => {
+    // Execute callback immediately for testing
+    callback();
+    return 1;
+  });
+
+  beforeEach(() => {
+    process.exit = mockExit as any;
+    global.setTimeout = mockSetTimeout as any;
+
+    // Clear all mocks
+    mockGit.diff.mockClear();
+    mockGit.commit.mockClear();
+    mockCommitMessage.mockClear();
+    mockExit.mockClear();
+    mockSetTimeout.mockClear();
+
+    // Mock modules
+    mock.module("simple-git", () => ({
+      default: () => mockGit,
+    }));
+
+    mock.module("./message.js", () => ({
+      default: mockCommitMessage,
+    }));
+  });
+
+  afterEach(() => {
+    process.exit = originalExit;
+    global.setTimeout = originalSetTimeout;
+    mock.restore();
+  });
+
+  test("app module should export runApp function", async () => {
+    const { runApp } = await import("./app.js");
+    expect(typeof runApp).toBe("function");
+  });
+
+  test("runApp handles successful flow", async () => {
+    // Mock successful operations
+    mockGit.diff.mockResolvedValue("mock diff content");
+    mockGit.commit.mockResolvedValue(undefined);
+    mockCommitMessage.mockResolvedValue("feat: add new feature");
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
+    expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
+    expect(mockSetTimeout).toHaveBeenCalled();
+    expect(mockExit).toHaveBeenCalledWith(0);
+  });
+
+  test("runApp handles no staged changes", async () => {
+    // Mock no staged changes
+    mockGit.diff.mockResolvedValue("");
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    expect(mockCommitMessage).not.toHaveBeenCalled();
+    expect(mockGit.commit).not.toHaveBeenCalled();
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 1000);
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  test("runApp handles git diff error", async () => {
+    // Mock git diff error
+    mockGit.diff.mockRejectedValue(new Error("Git diff failed"));
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  test("runApp handles commit message generation error", async () => {
+    // Mock successful diff but failed message generation
+    mockGit.diff.mockResolvedValue("mock diff content");
+    mockCommitMessage.mockRejectedValue(new Error("API error"));
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
+    expect(mockGit.commit).not.toHaveBeenCalled();
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  test("runApp handles git commit error", async () => {
+    // Mock successful operations until commit
+    mockGit.diff.mockResolvedValue("mock diff content");
+    mockCommitMessage.mockResolvedValue("feat: add new feature");
+    mockGit.commit.mockRejectedValue(new Error("Commit failed"));
+
+    const { runApp } = await import("./app.js");
+
+    await runApp();
+
+    expect(mockGit.diff).toHaveBeenCalledWith({ "--cached": null });
+    expect(mockCommitMessage).toHaveBeenCalledWith("mock diff content");
+    expect(mockGit.commit).toHaveBeenCalledWith("feat: add new feature");
+    expect(mockSetTimeout).toHaveBeenCalledWith(expect.any(Function), 2000);
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  test("runApp handles non-Error exceptions", async () => {
+    const originalInk = await import("ink");
+    mock.module("ink", () => ({
+      ...originalInk,
+      Text: () => null,
+    }));
+
+    mockGit.diff.mockRejectedValue("String error");
+
+    const { runApp } = await import("./app.js");
+
+    await expect(runApp()).resolves.not.toThrow();
+
+    mock.restore();
+  });
+});
+
+test("UI renders checking status correctly", () => {
+  const { lastFrame } = render(<Cli status="checking" />);
+  expect(lastFrame()).toContain("Checking for staged changes...");
+});

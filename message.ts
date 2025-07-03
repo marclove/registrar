@@ -38,6 +38,25 @@ async function generateCommit(
 const configFileName = "config.toml";
 
 /**
+ * Convert snake_case string to camelCase
+ */
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Convert an object with snake_case keys to camelCase keys
+ */
+function convertKeysToCamelCase<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const result: Record<string, any> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = toCamelCase(key);
+    result[camelKey] = value;
+  }
+  return result;
+}
+
+/**
  * Load configuration from config.toml file with fallback to defaults
  */
 async function loadConfig(): Promise<RuntimeConfig> {
@@ -58,15 +77,12 @@ async function loadConfig(): Promise<RuntimeConfig> {
       );
     }
 
+    // Convert snake_case TOML keys to camelCase and merge with defaults
+    const camelCaseConfig = convertKeysToCamelCase(tomlConfig);
     const config = {
       ...defaultConfig,
-      ...tomlConfig,
+      ...camelCaseConfig,
     };
-
-    // Handle snake_case conversion for prompt
-    if ("prompt" in tomlConfig) {
-      config.prompt = tomlConfig.prompt;
-    }
 
     return config;
   } catch (error) {

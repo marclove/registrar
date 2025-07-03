@@ -5,7 +5,9 @@
   "main": "dist/index.js",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/react": "^18.2.0",
+    "ink-testing-library": "^4.0.0"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -27,9 +29,12 @@
     "conventional-commits"
   ],
   "scripts": {
-    "build": "bun build index.ts --outdir=dist --target=node --external '@ai-sdk/anthropic' --external '@ai-sdk/cerebras' --external '@ai-sdk/cohere' --external '@ai-sdk/deepseek' --external '@ai-sdk/google' --external '@ai-sdk/groq' --external '@ai-sdk/mistral' --external '@ai-sdk/openai' --external '@ai-sdk/perplexity' --external '@ai-sdk/provider' --external '@ai-sdk/replicate' --external '@ai-sdk/togetherai' --external '@ai-sdk/vercel' --external '@ai-sdk/xai' --external '@iarna/toml' --external 'ai' && bun build message.ts --outdir=dist --target=node --external '@ai-sdk/anthropic' --external '@ai-sdk/cerebras' --external '@ai-sdk/cohere' --external '@ai-sdk/deepseek' --external '@ai-sdk/google' --external '@ai-sdk/groq' --external '@ai-sdk/mistral' --external '@ai-sdk/openai' --external '@ai-sdk/perplexity' --external '@ai-sdk/provider' --external '@ai-sdk/replicate' --external '@ai-sdk/togetherai' --external '@ai-sdk/vercel' --external '@ai-sdk/xai' --external '@iarna/toml' --external 'ai'",
+    "build": "bun build index.ts --outdir=dist --target=node --external '@ai-sdk/anthropic' --external '@ai-sdk/cerebras' --external '@ai-sdk/cohere' --external '@ai-sdk/deepseek' --external '@ai-sdk/google' --external '@ai-sdk/groq' --external '@ai-sdk/mistral' --external '@ai-sdk/openai' --external '@ai-sdk/perplexity' --external '@ai-sdk/provider' --external '@ai-sdk/replicate' --external '@ai-sdk/togetherai' --external '@ai-sdk/vercel' --external '@ai-sdk/xai' --external '@iarna/toml' --external 'ai' --external 'react' --external 'ink' --external 'ink-spinner' --external 'simple-git' && bun build message.ts --outdir=dist --target=node --external '@ai-sdk/anthropic' --external '@ai-sdk/cerebras' --external '@ai-sdk/cohere' --external '@ai-sdk/deepseek' --external '@ai-sdk/google' --external '@ai-sdk/groq' --external '@ai-sdk/mistral' --external '@ai-sdk/openai' --external '@ai-sdk/perplexity' --external '@ai-sdk/provider' --external '@ai-sdk/replicate' --external '@ai-sdk/togetherai' --external '@ai-sdk/vercel' --external '@ai-sdk/xai' --external '@iarna/toml' --external 'ai' --external 'react' --external 'ink' --external 'ink-spinner' --external 'simple-git' && bun build providers.ts --outdir=dist --target=node --external '@ai-sdk/anthropic' --external '@ai-sdk/cerebras' --external '@ai-sdk/cohere' --external '@ai-sdk/deepseek' --external '@ai-sdk/google' --external '@ai-sdk/groq' --external '@ai-sdk/mistral' --external '@ai-sdk/openai' --external '@ai-sdk/perplexity' --external '@ai-sdk/provider' --external '@ai-sdk/replicate' --external '@ai-sdk/togetherai' --external '@ai-sdk/vercel' --external '@ai-sdk/xai' --external '@iarna/toml' --external 'ai' --external 'react' --external 'ink' --external 'ink-spinner' --external 'simple-git' && bun build config.ts --outdir=dist --target=node --external '@iarna/toml' && bun build cli.tsx --outdir=dist --target=node --external 'react' --external 'ink' --external 'ink-spinner' && bun build app.tsx --outdir=dist --target=node --external 'react' --external 'ink' --external 'ink-spinner' --external 'simple-git'",
     "build:test": "bun build index.ts --outdir=dist --target=node",
     "test": "bun test",
+    "pretest": "bun run build",
+    "lint": "bun --bun tsc --noEmit",
+    "typecheck": "bun --bun tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
@@ -49,6 +54,9 @@
     "@ai-sdk/xai": "^1.2.16",
     "@iarna/toml": "^2.2.5",
     "ai": "^4.3.16",
+    "ink": "^6.0.1",
+    "ink-spinner": "^5.0.0",
+    "react": "^19.1.0",
     "simple-git": "^3.28.0",
     "zod": "^3.25.69"
   },
