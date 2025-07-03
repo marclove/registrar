@@ -3,7 +3,10 @@
 import { runApp } from "./app.js";
 
 async function main() {
-  await runApp();
+  const args = process.argv.slice(2);
+  const messageOnly = args.includes('--no-commit') || args.includes('--message-only');
+  
+  await runApp({ messageOnly });
 }
 
 if (import.meta.main) {

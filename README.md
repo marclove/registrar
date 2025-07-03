@@ -11,6 +11,7 @@ AI-powered commit message generator that follows Conventional Commits specificat
 - 🎨 Rich terminal UI with real-time status updates and timers
 - 🚀 Zero-config usage with sensible defaults
 - ✨ Automatically commits your changes after generating the message
+- 🔗 Git hook integration with message-only mode
 
 ## Quick Start
 
@@ -22,6 +23,9 @@ git add .
 
 # Generate commit message and commit automatically
 npx registrar
+
+# Or just generate the message without committing (for git hooks)
+npx registrar --message-only
 ```
 
 That's it! Registrar will:
@@ -85,15 +89,43 @@ export GOOGLE_API_KEY="your-api-key"
 # ... etc
 ```
 
-## Alternative: Git Hook Integration
+## Git Hook Integration
 
-> **Note**: Since Registrar now handles committing automatically, you typically don't need git hooks. However, if you prefer to generate commit messages without auto-committing, you can still use git hooks with a message-only mode.
+For git hook integration, use the `--message-only` or `--no-commit` flags to generate commit messages without automatically committing:
 
-### Manual Setup (prepare-commit-msg hook)
+```bash
+npx registrar --message-only
+npx registrar --no-commit  # Same as --message-only
+```
 
-If you want to use git hooks to generate commit messages without auto-committing, you would need to create a separate message-only version of the tool. The current version automatically commits after generating the message.
+### prepare-commit-msg Hook Setup
 
-For now, the recommended approach is to use `npx registrar` directly, which provides a better user experience with visual progress indicators and automatic commit handling.
+Create `.git/hooks/prepare-commit-msg`:
+
+```bash
+#!/bin/sh
+# Generate commit message using Registrar
+npx registrar --message-only > "$1"
+```
+
+Make it executable:
+```bash
+chmod +x .git/hooks/prepare-commit-msg
+```
+
+Now when you run `git commit`, Registrar will automatically generate the commit message for you.
+
+### commit-msg Hook Setup
+
+For validation and generation combined:
+
+```bash
+#!/bin/sh
+# Generate commit message if none provided
+if [ -z "$(cat $1 | grep -v '^#')" ]; then
+    npx registrar --message-only > "$1"
+fi
+```
 
 ## Usage Examples
 
@@ -105,6 +137,9 @@ git add .
 
 # Generate commit message and commit automatically
 npx registrar
+
+# Generate message only (for git hooks)
+npx registrar --message-only
 ```
 
 ### Custom Configuration

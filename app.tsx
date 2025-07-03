@@ -3,7 +3,11 @@ import simpleGit from "simple-git";
 import Cli from "./cli.js";
 import commitMessage from "./message.js";
 
-export async function runApp() {
+interface RunAppOptions {
+  messageOnly?: boolean;
+}
+
+export async function runApp(options: RunAppOptions = {}) {
   // Start with checking status - render() immediately starts displaying
   const { rerender } = render(<Cli status="checking" />);
 
@@ -72,18 +76,24 @@ export async function runApp() {
       return;
     }
 
-    // Update to committing status and show the message
-    rerender(<Cli status="committing" message={`Commit message: ${msg}`} />);
+    if (options.messageOnly) {
+      // Show the generated message and exit
+      rerender(<Cli status="message-only" message={msg} />);
+      setTimeout(() => process.exit(0), 1500);
+    } else {
+      // Update to committing status and show the message
+      rerender(<Cli status="committing" message={`Commit message: ${msg}`} />);
 
-    await git.commit(msg);
+      await git.commit(msg);
 
-    // Show success
-    rerender(
-      <Cli status="success" message={`Committed with message: ${msg}`} />,
-    );
+      // Show success
+      rerender(
+        <Cli status="success" message={`Committed with message: ${msg}`} />,
+      );
 
-    // Exit gracefully after showing success
-    setTimeout(() => process.exit(0), 1500);
+      // Exit gracefully after showing success
+      setTimeout(() => process.exit(0), 1500);
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 

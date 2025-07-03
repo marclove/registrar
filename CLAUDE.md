@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Registrar is an AI-powered commit message generator that creates Conventional Commits-compliant messages from git diffs. It's a Node.js/TypeScript CLI tool that supports multiple AI providers (Anthropic, OpenAI, Google, etc.) and can be integrated with git hooks.
+Registrar is an AI-powered commit message generator that creates Conventional Commits-compliant messages from git diffs. It's a Node.js/TypeScript CLI tool that supports multiple AI providers (Anthropic, OpenAI, Google, etc.) and can be integrated with git hooks. The tool offers two modes: automatic commit mode (default) and message-only mode for git hook integration.
 
 ## Architecture
 
 ### Core Components
 
-- **index.ts**: Main CLI entry point and orchestrator (simple .ts file for npx compatibility)
-- **app.tsx**: React-based application logic with git integration and CLI rendering
+- **index.ts**: Main CLI entry point and orchestrator with command-line argument parsing for message-only mode
+- **app.tsx**: React-based application logic with git integration, CLI rendering, and dual-mode support
 - **message.ts**: Core message generation logic with AI provider integration
 - **providers.ts**: Dynamic provider loading system supporting 13+ AI services
 - **config.ts**: Configuration management with TOML support and type-safe defaults
@@ -55,7 +55,7 @@ bun run prepublishOnly
 - Tests cover CLI argument handling, config loading, build verification, and React UI components
 - Comprehensive test coverage achieved: ~90% overall, 100% for core modules
 - Timer increment testing limited by Bun's current timer mocking capabilities
-- Run `bun test` for full test suite (70+ tests across 7 files)
+- Run `bun test` for full test suite (80+ tests across 8 files)
 
 ### Test Files
 - `cli.test.tsx`: React component rendering and status transitions
@@ -65,6 +65,7 @@ bun run prepublishOnly
 - `message.test.ts`: Core message generation functionality with 100% coverage
 - `config.test.ts`: Configuration management and type system validation
 - `providers.test.ts`: Provider loading and factory functions
+- `message-only.test.ts`: Message-only mode functionality and argument parsing
 
 ### Test Coverage Strategy
 - **Unit Tests**: Individual functions and components with comprehensive mocking
@@ -121,6 +122,33 @@ The build process uses Bun with extensive externalization of AI SDK packages to 
 - TSX files are compiled to JS while maintaining proper module imports
 - The build output maintains npx compatibility through index.js entry point
 
+## CLI Usage Modes
+
+The tool supports two operation modes:
+
+### Default Mode (Automatic Commit)
+```bash
+npx registrar
+```
+- Generates commit message from staged changes
+- Automatically commits the changes with the generated message
+- Shows progress through: checking → generating → committing → success
+
+### Message-Only Mode (Git Hook Integration)
+```bash
+npx registrar --message-only
+npx registrar --no-commit  # Same as --message-only
+```
+- Generates commit message from staged changes
+- Displays the message without committing
+- Shows progress through: checking → generating → message-only
+- Perfect for git hook integration (prepare-commit-msg, commit-msg)
+
+### Command Line Argument Parsing
+- `index.ts` parses `process.argv` to detect `--message-only` or `--no-commit` flags
+- Passes `{ messageOnly: boolean }` options to `runApp()`
+- Both flags provide identical functionality for user convenience
+
 ## API Integration
 
 Each provider requires its own API key set as an environment variable (e.g., `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`). The system automatically maps providers to their expected environment variable names.
@@ -129,7 +157,7 @@ Each provider requires its own API key set as an environment variable (e.g., `AN
 
 The CLI interface uses React with ink to provide rich terminal interactions:
 
-- **Status Phases**: checking → generating → committing → success/error
+- **Status Phases**: checking → generating → committing/message-only → success/error
 - **Progress Indicators**: Animated spinners during async operations
 - **Timer Display**: Real-time elapsed time counter during generation and commit phases
 - **Visual Feedback**: Green checkmarks for success, red X for errors

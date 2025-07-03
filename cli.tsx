@@ -3,7 +3,7 @@ import Spinner from 'ink-spinner';
 import { useEffect, useState } from 'react';
 
 interface CliProps {
-  status: 'checking' | 'generating' | 'retrying' | 'committing' | 'success' | 'error';
+  status: 'checking' | 'generating' | 'retrying' | 'committing' | 'success' | 'error' | 'message-only';
   message?: string;
   error?: string;
   attempt?: number;
@@ -37,6 +37,8 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
         return 'Committing changes...';
       case 'success':
         return 'Committed successfully!';
+      case 'message-only':
+        return 'Generated commit message:';
       case 'error':
         return 'Error occurred';
       default:
@@ -57,6 +59,9 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
         )}
         {!showSpinner && status === 'success' && (
           <Text color="green">✓ {getStatusText()}</Text>
+        )}
+        {!showSpinner && status === 'message-only' && (
+          <Text color="blue">✓ {getStatusText()}</Text>
         )}
         {!showSpinner && status === 'error' && (
           <Text color="red">✗ {getStatusText()}</Text>
