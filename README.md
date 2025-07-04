@@ -26,6 +26,12 @@ npx llmc
 
 # Or just generate the message without committing (for git hooks)
 npx llmc --message-only
+
+# Check version
+npx llmc -v
+
+# Show help
+npx llmc -h
 ```
 
 That's it! llmc will:

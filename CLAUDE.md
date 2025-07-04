@@ -129,7 +129,7 @@ npx llmc --no-commit  # Same as --message-only
 - Perfect for git hook integration (prepare-commit-msg, commit-msg)
 
 ### Command Line Argument Parsing
-- `index.ts` parses `process.argv` to detect `--message-only` or `--no-commit` flags
+- `index.ts` uses yargs for robust CLI argument parsing with automatic help generation
 - Passes `{ messageOnly: boolean }` options to `runApp()`
 - Both flags provide identical functionality for user convenience
 
