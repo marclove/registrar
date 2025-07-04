@@ -209,6 +209,9 @@ npm run test:all
 
 # Type checking
 npm run lint
+
+# Releasing
+npm run release
 ```
 
 ### Test Structure
@@ -282,13 +285,16 @@ For maintainers, here's how to publish new versions to npm:
 
 2. **Update version in package.json**:
    ```bash
-   # For patch releases (bug fixes)
+   # Use Conventional Commits to drive release determination
+   npm run release
+
+   # For explicitly specifying patch releases (bug fixes)
    npm version patch
 
-   # For minor releases (new features)
+   # For explicitly specifying minor releases (new features)
    npm version minor
 
-   # For major releases (breaking changes)
+   # For explicitly specifying major releases (breaking changes)
    npm version major
    ```
 
