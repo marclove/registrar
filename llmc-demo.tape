@@ -2,7 +2,7 @@
 # This tape demonstrates the basic usage of llmc.
 
 # Set the output file for the GIF.
-Output "llmc-demo.mp4"
+Output "llmc-demo.gif"
 
 # Set the terminal window properties for a clean recording.
 Set Width 1400
@@ -79,7 +79,7 @@ Enter
 Sleep 10s
 
 # Display the latest commit in the log to show the generated message.
-Type "git log -1"
+Type "git log"
 Enter
 Sleep 5s
 

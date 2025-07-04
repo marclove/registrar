@@ -2,7 +2,7 @@
 
 AI-powered commit message generator that follows Conventional Commits specification. Simply run `npx llmc` and it will automatically generate a commit message from your staged changes and commit them for you.
 
-![demo video](/llmc-demo.mp4)
+![demo video](/llmc-demo.gif)
 
 ## Features
 
