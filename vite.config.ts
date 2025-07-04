@@ -1,7 +1,15 @@
-/// <reference types="vitest" />
-import { chmod } from 'fs';
-import { join } from 'path';
 import { defineConfig } from 'vite';
+import pkg from './package.json';
+
+// Automatically externalize dependencies and peerDependencies
+const externalPackages = [
+  ...Object.keys(pkg.dependencies || {}),
+  ...Object.keys(pkg.peerDependencies || {}),
+  // Add node built-in modules
+  'node:fs',
+  'node:path',
+  'node:url',
+];
 
 export default defineConfig({
   build: {
@@ -14,40 +22,18 @@ export default defineConfig({
         entryFileNames: '[name].js',
         format: 'es',
       },
-      external: (id) => {
-        // Keep node: prefixed imports as externals, but let Vite handle the rest
-        return id.startsWith('node:') && !id.startsWith('node:process');
-      },
+      // Mark all dependencies and node built-ins as external
+      external: (id) => externalPackages.some((pkgName) => id.startsWith(pkgName)),
     },
     target: 'node18',
     ssr: true, // This tells Vite we're building for server-side (Node.js)
   },
-  plugins: [
-    {
-      name: 'make-executable',
-      writeBundle() {
-        // Make the binary executable after build
-        const binaryPath = join('dist', 'index.js');
-        chmod(binaryPath, 0o755, (err) => {
-          if (err) {
-            console.error('Failed to make binary executable:', err);
-          } else {
-            console.log('Binary made executable:', binaryPath);
-          }
-        });
-      },
-    },
-  ],
   resolve: {
     alias: {
       'node:process': 'process',
-      'node:path': 'path',
-      'node:fs': 'fs',
-      'node:url': 'url',
     },
   },
   define: {
-    // Ensure process is available
     global: 'globalThis',
   },
   test: {
@@ -61,7 +47,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/tmp/**',
-      ...(process.env.VITEST_INTEGRATION ? [] : ['integration-api.test.ts'])
+      ...(process.env.VITEST_INTEGRATION ? [] : ['integration-api.test.ts']),
     ],
   },
 });
