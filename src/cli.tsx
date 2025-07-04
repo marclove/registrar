@@ -14,7 +14,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    if (status === 'generating' || status === 'retrying' || status === 'committing') {
+    if (['checking', 'generating', 'retrying', 'committing'].includes(status)) {
       const interval = setInterval(() => {
         setSeconds(prev => prev + 1);
       }, 1000);
@@ -46,8 +46,8 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
     }
   };
 
-  const showSpinner = status === 'checking' || status === 'generating' || status === 'retrying' || status === 'committing';
-  const showTimer = status === 'generating' || status === 'retrying' || status === 'committing';
+  const showSpinner = ['checking', 'generating', 'retrying', 'committing'].includes(status);
+  const showTimer = ['generating', 'retrying', 'committing'].includes(status);
 
   return (
     <Box flexDirection="column">
@@ -58,7 +58,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
           </Text>
         )}
         {!showSpinner && status === 'success' && (
-          <Text color="green">✓ {getStatusText()}</Text>
+          <Text color="cyan">✓ {getStatusText()}</Text>
         )}
         {!showSpinner && status === 'message-only' && (
           <Text color="blue">✓ {getStatusText()}</Text>
@@ -84,7 +84,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
 
       {message && (
         <Box marginTop={1} paddingLeft={2}>
-          <Text>{message}</Text>
+          <Text color="green">{message}</Text>
         </Box>
       )}
 
