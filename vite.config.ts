@@ -1,4 +1,6 @@
 /// <reference types="vitest" />
+import { chmod } from 'fs';
+import { join } from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -20,6 +22,22 @@ export default defineConfig({
     target: 'node18',
     ssr: true, // This tells Vite we're building for server-side (Node.js)
   },
+  plugins: [
+    {
+      name: 'make-executable',
+      writeBundle() {
+        // Make the binary executable after build
+        const binaryPath = join('dist', 'index.js');
+        chmod(binaryPath, 0o755, (err) => {
+          if (err) {
+            console.error('Failed to make binary executable:', err);
+          } else {
+            console.log('Binary made executable:', binaryPath);
+          }
+        });
+      },
+    },
+  ],
   resolve: {
     alias: {
       'node:process': 'process',
