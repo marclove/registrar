@@ -54,7 +54,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
       <Box flexDirection="row">
         {showSpinner && (
           <Text color="cyan">
-            <Spinner type="dots" /> {getStatusText()}
+            <Spinner type="star" /> {getStatusText()}
           </Text>
         )}
         {!showSpinner && status === 'success' && (
