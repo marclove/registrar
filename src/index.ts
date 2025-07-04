@@ -18,6 +18,10 @@ function getVersion(): string {
 
 async function main() {
   const argv = await yargs(hideBin(process.argv))
+    .scriptName("llmc")
+    .usage("Usage: llmc [options]")
+    .epilogue("llmc is a tool for generating commit messages using LLMs. It's an abbreviation of \"LLM Commit\".\n")
+    .epilogue("See https://github.com/llm-commit/llmc for more usage information.")
     .option("no-commit", {
       type: "boolean",
       description: "Generate message only without committing",
