@@ -1,18 +1,11 @@
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  vi,
-  test,
-} from "vitest";
-import React from "react";
-import * as message from "./message.js";
 import { render } from "ink";
+import React from "react";
 import simpleGit from "simple-git";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import * as message from "./message.js";
 
-vi.mock('ink', async () => {
-  const actual = await vi.importActual('ink');
+vi.mock("ink", async () => {
+  const actual = await vi.importActual("ink");
   return {
     ...actual,
     render: vi.fn(() => ({

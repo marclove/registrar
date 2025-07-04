@@ -82,9 +82,7 @@ export async function loadProviderPackage(
     return await import(packageName);
   } catch (error) {
     throw new Error(
-      `Failed to load provider ${provider}: ${
-        error instanceof Error ? error.message : String(error)
-      }`,
+      `Failed to load provider ${provider}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }
@@ -95,7 +93,7 @@ export async function createProvider(
 ): Promise<ProviderV1> {
   const factoryName = factoryNames[provider];
   const providerPackage = await loadProviderPackage(provider);
-  
+
   const options: any = {};
   if (apiKey) {
     options.apiKey = apiKey;
@@ -107,6 +105,6 @@ export async function createProvider(
       options.apiKey = envApiKey;
     }
   }
-  
+
   return new providerPackage[factoryName](options);
 }

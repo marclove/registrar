@@ -27,7 +27,6 @@ llmc is an AI-powered commit message generator that creates Conventional Commits
 - **Snake/Camel Case Conversion**: Automatic conversion between TOML snake_case and TypeScript camelCase
 - **Comprehensive Testing**: Full test coverage with unit, integration, and UI testing strategies
 
-
 ## Testing
 
 - Uses Vitest as the test runner with `ink-testing-library` for React component testing
@@ -38,6 +37,7 @@ llmc is an AI-powered commit message generator that creates Conventional Commits
 - Timer increment testing works well with Vitest's timer mocking capabilities
 
 ### Test Files
+
 - `cli.test.tsx`: React component rendering and status transitions
 - `app.test.tsx`: Application logic, React UI testing, and module exports
 - `index.test.ts`: Entry point module structure
@@ -49,6 +49,7 @@ llmc is an AI-powered commit message generator that creates Conventional Commits
 - `message-only.test.ts`: Message-only mode functionality and argument parsing
 
 ### Test Coverage Strategy
+
 - **Unit Tests**: Individual functions and components with comprehensive mocking
 - **Integration Tests**: Real CLI execution and git integration (separated by API usage)
 - **API Tests**: Separate test file for full end-to-end API integration (`npm run test:integration`)
@@ -69,6 +70,7 @@ The application uses a `config.toml` file in the project root with these key set
 - `prompt`: Custom message template with `${diff}` interpolation
 
 ### Configuration File Format
+
 The configuration uses **snake_case** naming in TOML files but is automatically converted to **camelCase** in TypeScript runtime:
 
 ```toml
@@ -90,6 +92,7 @@ api_key_name = "OPENAI_API_KEY"
 ```
 
 ### Configuration Loading
+
 - **Automatic Conversion**: Built-in `toCamelCase()` utility converts snake_case TOML keys to camelCase TypeScript properties
 - **Graceful Fallbacks**: Missing config file or parsing errors fall back to sensible defaults
 - **Type Safety**: Full TypeScript type checking with `TomlConfigSchema` and `RuntimeConfig` types
@@ -100,6 +103,7 @@ api_key_name = "OPENAI_API_KEY"
 The build process uses Vite with server-side rendering (SSR) mode to properly handle Node.js built-ins and external dependencies. All TypeScript files (`index.ts`, `message.ts`, `cli.tsx`, `app.tsx`) are built with appropriate externalization for Node.js modules.
 
 ### Key Build Considerations
+
 - Vite SSR mode ensures proper Node.js compatibility for CLI usage
 - Node.js built-ins are properly aliased to avoid browser externalization issues
 - TypeScript files are compiled to ES modules while maintaining proper module imports
@@ -111,24 +115,29 @@ The build process uses Vite with server-side rendering (SSR) mode to properly ha
 The tool supports two operation modes:
 
 ### Default Mode (Automatic Commit)
+
 ```bash
 npx llmc
 ```
+
 - Generates commit message from staged changes
 - Automatically commits the changes with the generated message
 - Shows progress through: checking → generating → committing → success
 
 ### Message-Only Mode (Git Hook Integration)
+
 ```bash
 npx llmc --message-only
 npx llmc --no-commit  # Same as --message-only
 ```
+
 - Generates commit message from staged changes
 - Displays the message without committing
 - Shows progress through: checking → generating → message-only
 - Perfect for git hook integration (prepare-commit-msg, commit-msg)
 
 ### Command Line Argument Parsing
+
 - `index.ts` uses yargs for robust CLI argument parsing with automatic help generation
 - Passes `{ messageOnly: boolean }` options to `runApp()`
 - Both flags provide identical functionality for user convenience
@@ -148,6 +157,7 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 - **Message Display**: Shows commit messages and error details
 
 ### Ink Integration Notes
+
 - `render()` immediately starts display, `rerender()` updates the same instance
 - Timer functionality uses `setInterval` with React `useEffect` for state management
 - Components are tested with `ink-testing-library` for UI behavior verification
@@ -159,6 +169,7 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 ## Message Generation Implementation
 
 ### Core Utilities in message.ts
+
 - **`toCamelCase(str: string)`**: Converts snake_case strings to camelCase
 - **`convertKeysToCamelCase(obj)`**: Recursively converts object keys from snake_case to camelCase
 - **`loadConfig()`**: Loads and validates TOML configuration with automatic key conversion
@@ -166,6 +177,7 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 - **`commitMessage()`**: Handles prompt templating and diff interpolation
 
 ### Error Handling Strategy
+
 - **Graceful Degradation**: Config parsing errors fall back to defaults
 - **Provider Validation**: Invalid provider names are caught and logged
 - **API Failures**: Provider creation and generation failures are properly caught and re-thrown
@@ -173,6 +185,6 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 
 ## Testing Philosophy
 
-- **Isolate and Verify**: When fixing test failures, make one logical change at a time (e.g., install a dependency, add one test) and run the *entire* test suite to verify the change. This prevents compounding errors.
+- **Isolate and Verify**: When fixing test failures, make one logical change at a time (e.g., install a dependency, add one test) and run the _entire_ test suite to verify the change. This prevents compounding errors.
 - **Diagnose the Environment**: If tests fail unexpectedly after a change, the root cause is likely the testing environment itself (e.g., missing dependencies, conflicting mocks), not just the test code. Prioritize fixing the environment over creating workarounds.
-- **Avoid Failure Loops**: If a strategy fails, do not repeat it. Analyze *why* it failed and choose a different approach. Trust a "known good state" as a safe point to revert to.
+- **Avoid Failure Loops**: If a strategy fails, do not repeat it. Analyze _why_ it failed and choose a different approach. Trust a "known good state" as a safe point to revert to.

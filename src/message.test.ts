@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, expect, vi, test } from "vitest";
 import { execa } from "execa";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import * as providersModule from "./providers.js";
 
 // Mock modules and dependencies
@@ -13,11 +13,9 @@ const mockCreateProvider = vi.fn(() =>
   Promise.resolve({
     languageModel: mockLanguageModel,
     textEmbeddingModel: mockTextEmbeddingModel,
-  }),
+  })
 );
-const mockGenerateObject = vi.fn(() =>
-  Promise.resolve({ object: { commit_message: "test: mock commit" } }),
-);
+const mockGenerateObject = vi.fn(() => Promise.resolve({ object: { commit_message: "test: mock commit" } }));
 const mockParse = vi.fn(() => ({}));
 const mockProcessExit = vi.fn(() => {});
 
@@ -85,7 +83,8 @@ test.skipIf(!process.env.RUN_INTEGRATION_TESTS)(
       return;
     }
 
-    const testDiff = `diff --git a/src/utils.ts b/src/utils.ts\nindex 1234567..abcdefg 100644\n--- a/src/utils.ts\n+++ b/src/utils.ts\n@@ -1,3 +1,6 @@\n+export function add(a: number, b: number): number {\n+  return a + b;\n+}\n+\n export function multiply(x: number, y: number): number {\n   return x * y;\n }`;
+    const testDiff =
+      `diff --git a/src/utils.ts b/src/utils.ts\nindex 1234567..abcdefg 100644\n--- a/src/utils.ts\n+++ b/src/utils.ts\n@@ -1,3 +1,6 @@\n+export function add(a: number, b: number): number {\n+  return a + b;\n+}\n+\n export function multiply(x: number, y: number): number {\n   return x * y;\n }`;
 
     const result = await execa("node", ["dist/message.js", testDiff], {
       env: { ...process.env, ANTHROPIC_API_KEY: apiKey },
@@ -121,7 +120,7 @@ test("loadConfig should return defaultConfig when no config file exists", async 
 test("loadConfig should handle valid TOML config", async () => {
   mockExistsSync.mockReturnValue(true);
   mockReadFileSync.mockReturnValue(
-    'provider = "openai"\nmodel = "gpt-4"\ntemperature = 0.7',
+    "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.7",
   );
   mockParse.mockReturnValue({
     provider: "openai",
@@ -139,14 +138,14 @@ test("loadConfig should handle valid TOML config", async () => {
 
 test("loadConfig should handle invalid provider in config", async () => {
   mockExistsSync.mockReturnValue(true);
-  mockReadFileSync.mockReturnValue('provider = "invalid"');
+  mockReadFileSync.mockReturnValue("provider = \"invalid\"");
   mockParse.mockReturnValue({ provider: "invalid" });
 
   const messageModule = await import("./message.js");
   await messageModule.default("test diff");
 
   expect(mockConsoleError).toHaveBeenCalledWith(
-    'Invalid provider "invalid" in config.toml. Must be one of: anthropic, cerebras, cohere, deepseek, google, groq, mistral, openai, perplexity, replicate, togetherai, vercel, xai. Falling back to default provider "anthropic"',
+    "Invalid provider \"invalid\" in config.toml. Must be one of: anthropic, cerebras, cohere, deepseek, google, groq, mistral, openai, perplexity, replicate, togetherai, vercel, xai. Falling back to default provider \"anthropic\"",
   );
 });
 
@@ -168,7 +167,7 @@ test("loadConfig should handle TOML parsing errors", async () => {
 
 test("loadConfig should handle custom prompt in config", async () => {
   mockExistsSync.mockReturnValue(true);
-  mockReadFileSync.mockReturnValue('prompt = "Custom prompt"');
+  mockReadFileSync.mockReturnValue("prompt = \"Custom prompt\"");
   mockParse.mockReturnValue({ prompt: "Custom prompt" });
 
   const messageModule = await import("./message.js");
@@ -220,7 +219,7 @@ test("generateCommit should handle generateObject failure", async () => {
 
 test("commitMessage should use custom prompt when provided", async () => {
   mockExistsSync.mockReturnValue(true);
-  mockReadFileSync.mockReturnValue('prompt = "Custom: ${diff}"');
+  mockReadFileSync.mockReturnValue("prompt = \"Custom: ${diff}\"");
   mockParse.mockReturnValue({ prompt: "Custom: ${diff}" });
 
   mockCreateProvider.mockResolvedValue({
@@ -266,7 +265,7 @@ test("commitMessage should use default prompt when not provided", async () => {
 
 test("commitMessage should handle empty prompt in config", async () => {
   mockExistsSync.mockReturnValue(true);
-  mockReadFileSync.mockReturnValue('model = "test"');
+  mockReadFileSync.mockReturnValue("model = \"test\"");
   mockParse.mockReturnValue({ model: "test" });
 
   mockCreateProvider.mockResolvedValue({
@@ -293,7 +292,7 @@ test("commitMessage should handle empty prompt in config", async () => {
 test("main function should handle all config options", async () => {
   mockExistsSync.mockReturnValue(true);
   mockReadFileSync.mockReturnValue(
-    'provider = "openai"\nmodel = "gpt-4"\ntemperature = 0.5\nmax_tokens = 100\nprompt = "Test: ${diff}"',
+    "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.5\nmax_tokens = 100\nprompt = \"Test: ${diff}\"",
   );
   mockParse.mockReturnValue({
     provider: "openai",
@@ -348,7 +347,7 @@ test("module should export main function as default", async () => {
 test("config should handle all snake_case conversions", async () => {
   mockExistsSync.mockReturnValue(true);
   mockReadFileSync.mockReturnValue(
-    'provider = "openai"\nmodel = "gpt-4"\ntemperature = 0.7\nmax_tokens = 200\napi_key = "test-key"\napi_key_name = "OPENAI_API_KEY"\nprompt = "Snake case: ${diff}"',
+    "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.7\nmax_tokens = 200\napi_key = \"test-key\"\napi_key_name = \"OPENAI_API_KEY\"\nprompt = \"Snake case: ${diff}\"",
   );
   mockParse.mockReturnValue({
     provider: "openai",
@@ -406,7 +405,7 @@ test("toCamelCase utility should convert snake_case to camelCase", async () => {
   // We need to test the utility function indirectly through the config loading
   mockExistsSync.mockReturnValue(true);
   mockReadFileSync.mockReturnValue(
-    'snake_case_key = "value"\nanother_key = "test"',
+    "snake_case_key = \"value\"\nanother_key = \"test\"",
   );
   mockParse.mockReturnValue({
     snake_case_key: "value",
@@ -431,7 +430,7 @@ test("toCamelCase utility should convert snake_case to camelCase", async () => {
 test("convertKeysToCamelCase should handle complex snake_case keys", async () => {
   mockExistsSync.mockReturnValue(true);
   mockReadFileSync.mockReturnValue(
-    'multi_word_snake_case = "value"\nsingle = "test"',
+    "multi_word_snake_case = \"value\"\nsingle = \"test\"",
   );
   mockParse.mockReturnValue({
     multi_word_snake_case: "value",

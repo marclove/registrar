@@ -1,5 +1,5 @@
+import { existsSync, unlinkSync, writeFileSync } from "fs";
 import { expect, test } from "vitest";
-import { existsSync, writeFileSync, unlinkSync } from "fs";
 import { defaultConfig, defaultPrompt, type RuntimeConfig, type TomlConfigSchema } from "./config.js";
 
 const testConfigPath = "test-config.toml";
@@ -17,7 +17,7 @@ test("defaultConfig should have correct structure", () => {
 test("defaultPrompt should generate correct prompt", () => {
   const testDiff = "test diff content";
   const prompt = defaultPrompt(testDiff);
-  
+
   expect(prompt).toBeTruthy();
   expect(typeof prompt).toBe("string");
   expect(prompt).toContain("Conventional Commits");
@@ -38,7 +38,7 @@ test("defaultPrompt should handle empty diff", () => {
 test("defaultPrompt should handle special characters in diff", () => {
   const testDiff = "test diff with ${special} characters & symbols";
   const prompt = defaultPrompt(testDiff);
-  
+
   expect(prompt).toContain(testDiff);
   expect(prompt).toContain("${special}");
   expect(prompt).toContain("&");
@@ -51,9 +51,9 @@ test("type system should handle RuntimeConfig correctly", () => {
     temperature: 0.5,
     maxTokens: 100,
     apiKey: "test-key",
-    prompt: "custom prompt"
+    prompt: "custom prompt",
   };
-  
+
   expect(config.provider).toBe("anthropic");
   expect(config.model).toBe("claude-sonnet-4-0");
   expect(config.temperature).toBe(0.5);
@@ -70,9 +70,9 @@ test("type system should handle TomlConfigSchema correctly", () => {
     max_tokens: 200,
     api_key: "test-key",
     api_key_name: "OPENAI_API_KEY",
-    prompt: "custom prompt"
+    prompt: "custom prompt",
   };
-  
+
   expect(tomlConfig.provider).toBe("openai");
   expect(tomlConfig.model).toBe("gpt-4");
   expect(tomlConfig.temperature).toBe(0.7);
@@ -87,9 +87,9 @@ test("snake_case conversion should work correctly", () => {
   const config: TomlConfigSchema = {
     api_key: "test",
     api_key_name: "TEST_KEY",
-    max_tokens: 100
+    max_tokens: 100,
   };
-  
+
   expect(config.api_key).toBe("test");
   expect(config.api_key_name).toBe("TEST_KEY");
   expect(config.max_tokens).toBe(100);
@@ -103,7 +103,7 @@ test("config exports should be available", () => {
 
 test("defaultConfig should maintain original values", () => {
   const originalProvider = defaultConfig.provider;
-  
+
   // Test that we can read the original value
   expect(defaultConfig.provider).toBe(originalProvider);
   expect(defaultConfig.provider).toBe("anthropic");
@@ -113,7 +113,7 @@ test("defaultPrompt should be deterministic", () => {
   const testDiff = "test diff";
   const prompt1 = defaultPrompt(testDiff);
   const prompt2 = defaultPrompt(testDiff);
-  
+
   expect(prompt1).toBe(prompt2);
 });
 
@@ -130,9 +130,9 @@ index 1234567..abcdefg 100644
  export function multiply(x: number, y: number): number {
    return x * y;
  }`;
-  
+
   const prompt = defaultPrompt(testDiff);
-  
+
   expect(prompt).toContain("diff --git");
   expect(prompt).toContain("export function add");
   expect(prompt).toContain("export function multiply");

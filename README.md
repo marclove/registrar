@@ -35,6 +35,7 @@ npx llmc -h
 ```
 
 That's it! llmc will:
+
 1. ✅ Check for staged changes
 2. 🤖 Generate a commit message using AI
 3. 📝 Commit your changes with the generated message
@@ -115,6 +116,7 @@ npx llmc --message-only > "$1"
 ```
 
 Make it executable:
+
 ```bash
 chmod +x .git/hooks/prepare-commit-msg
 ```
@@ -247,6 +249,7 @@ This separation allows for fast development cycles while ensuring comprehensive 
 ### Error Handling
 
 llmc provides detailed error messages and visual feedback:
+
 - ✅ Green checkmark for success
 - ❌ Red X for errors
 - 🔄 Automatic retry with progress indicators
@@ -297,6 +300,7 @@ For maintainers, here's how to publish new versions to npm:
 #### npx Functionality
 
 The npx functionality is already fully configured in `package.json`:
+
 - ✅ `"bin": { "llmc": "./dist/index.js" }` - enables `npx llmc`
 - ✅ `"main": "dist/index.js"` - sets the entry point
 - ✅ `"files": ["dist/"]` - includes built files in npm package

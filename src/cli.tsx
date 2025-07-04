@@ -1,9 +1,9 @@
-import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
-import { useEffect, useState } from 'react';
+import { Box, Text } from "ink";
+import Spinner from "ink-spinner";
+import { useEffect, useState } from "react";
 
 interface CliProps {
-  status: 'checking' | 'generating' | 'retrying' | 'committing' | 'success' | 'error' | 'message-only';
+  status: "checking" | "generating" | "retrying" | "committing" | "success" | "error" | "message-only";
   message?: string;
   error?: string;
   attempt?: number;
@@ -14,7 +14,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
   const [seconds, setSeconds] = useState(0);
 
   useEffect(() => {
-    if (['checking', 'generating', 'retrying', 'committing'].includes(status)) {
+    if (["checking", "generating", "retrying", "committing"].includes(status)) {
       const interval = setInterval(() => {
         setSeconds(prev => prev + 1);
       }, 1000);
@@ -27,27 +27,27 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
 
   const getStatusText = () => {
     switch (status) {
-      case 'checking':
-        return 'Checking for staged changes...';
-      case 'generating':
-        return 'Generating commit message...';
-      case 'retrying':
+      case "checking":
+        return "Checking for staged changes...";
+      case "generating":
+        return "Generating commit message...";
+      case "retrying":
         return `Retrying commit message generation (attempt ${attempt}/${maxAttempts})...`;
-      case 'committing':
-        return 'Committing changes...';
-      case 'success':
-        return 'Committed successfully!';
-      case 'message-only':
-        return 'Generated commit message:';
-      case 'error':
-        return 'Error occurred';
+      case "committing":
+        return "Committing changes...";
+      case "success":
+        return "Committed successfully!";
+      case "message-only":
+        return "Generated commit message:";
+      case "error":
+        return "Error occurred";
       default:
-        return '';
+        return "";
     }
   };
 
-  const showSpinner = ['checking', 'generating', 'retrying', 'committing'].includes(status);
-  const showTimer = ['generating', 'retrying', 'committing'].includes(status);
+  const showSpinner = ["checking", "generating", "retrying", "committing"].includes(status);
+  const showTimer = ["generating", "retrying", "committing"].includes(status);
 
   return (
     <Box flexDirection="column">
@@ -57,15 +57,9 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
             <Spinner type="star" /> {getStatusText()}
           </Text>
         )}
-        {!showSpinner && status === 'success' && (
-          <Text color="green">✓ {getStatusText()}</Text>
-        )}
-        {!showSpinner && status === 'message-only' && (
-          <Text color="green">✓ {getStatusText()}</Text>
-        )}
-        {!showSpinner && status === 'error' && (
-          <Text color="red">✗ {getStatusText()}</Text>
-        )}
+        {!showSpinner && status === "success" && <Text color="green">✓ {getStatusText()}</Text>}
+        {!showSpinner && status === "message-only" && <Text color="green">✓ {getStatusText()}</Text>}
+        {!showSpinner && status === "error" && <Text color="red">✗ {getStatusText()}</Text>}
         {showTimer && (
           <Box marginLeft={1}>
             <Text color="gray">Time elapsed: {seconds}s</Text>
@@ -73,7 +67,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
         )}
       </Box>
 
-      {status === 'retrying' && attempt && maxAttempts && (
+      {status === "retrying" && attempt && maxAttempts && (
         <Box marginTop={1}>
           <Text color="yellow">
             Previous attempt failed. Retrying... ({attempt - 1} failed attempts)

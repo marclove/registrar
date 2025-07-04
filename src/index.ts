@@ -32,7 +32,7 @@ async function main() {
     .alias("version", "v")
     .strict()
     .parserConfiguration({
-      "boolean-negation": false
+      "boolean-negation": false,
     })
     .argv;
 

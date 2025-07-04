@@ -35,12 +35,13 @@
     "conventional-commits"
   ],
   "scripts": {
-    "build": "vite build",
-    "test": "vitest --run",
+    "format": "npx dprint fmt",
+    "build": "npx dprint fmt && vite build",
+    "test": "npx dprint fmt && vitest --run",
     "test:watch": "vitest",
     "test:integration": "VITEST_INTEGRATION=1 vitest --run integration-api.test.ts",
     "test:all": "VITEST_INTEGRATION=1 vitest --run",
-    "lint": "tsc --noEmit",
+    "lint": "npx dprint fmt && tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

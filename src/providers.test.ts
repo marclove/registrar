@@ -1,11 +1,5 @@
 import { beforeEach, expect, test, vi } from "vitest";
-import {
-  apiKeyNames,
-  createProvider,
-  factoryNames,
-  loadProviderPackage,
-  providers,
-} from "./providers.js";
+import { apiKeyNames, createProvider, factoryNames, loadProviderPackage, providers } from "./providers.js";
 import type { ProviderName } from "./providers.js";
 
 // Mock process.env

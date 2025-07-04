@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, expect, vi, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 // Mock process.exit to prevent tests from actually exiting
 const originalExit = process.exit;
@@ -46,7 +46,6 @@ test("shebang should be present for CLI usage", async () => {
   const { readFileSync, existsSync } = await import("node:fs");
   const { resolve } = await import("node:path");
   const filePath = resolve("dist/index.js");
-
 
   if (existsSync(filePath)) {
     const content = readFileSync(filePath, "utf-8");

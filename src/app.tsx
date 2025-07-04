@@ -10,11 +10,11 @@ interface RunAppOptions {
 export async function runApp(options: RunAppOptions = {}) {
   // Check if we're in message-only mode and stdout is not a TTY (being redirected)
   const isNonInteractive = options.messageOnly && !process.stdout.isTTY;
-  
+
   // Only render UI if we're in an interactive terminal
-  const { rerender } = isNonInteractive ? 
-    { rerender: () => {} } : 
-    render(<Cli status="checking" />);
+  const { rerender } = isNonInteractive
+    ? { rerender: () => {} }
+    : render(<Cli status="checking" />);
 
   try {
     const git = simpleGit();
@@ -49,11 +49,13 @@ export async function runApp(options: RunAppOptions = {}) {
           if (attempt === 1) {
             rerender(<Cli status="generating" />);
           } else {
-            rerender(<Cli
-              status="retrying"
-              attempt={attempt}
-              maxAttempts={maxAttempts}
-            />);
+            rerender(
+              <Cli
+                status="retrying"
+                attempt={attempt}
+                maxAttempts={maxAttempts}
+              />,
+            );
           }
         }
 

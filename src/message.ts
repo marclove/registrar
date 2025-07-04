@@ -3,12 +3,7 @@ import { parse } from "@iarna/toml";
 import { generateObject } from "ai";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
-import {
-  defaultConfig,
-  defaultPrompt,
-  type RuntimeConfig,
-  type TomlConfigSchema,
-} from "./config.js";
+import { defaultConfig, defaultPrompt, type RuntimeConfig, type TomlConfigSchema } from "./config.js";
 import { createProvider, type ProviderName, providers } from "./providers.js";
 
 const schema = z.object({

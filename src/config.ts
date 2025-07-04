@@ -44,7 +44,7 @@ export const defaultConfig: RuntimeConfig = {
   maxTokens: 250,
 };
 
-export const defaultPrompt = function (diff: string) {
+export const defaultPrompt = function(diff: string) {
   return `You are tasked with writing a commit message that follows the Conventional Commits specification based on a given git diff.
 
 Here's a summary of the Conventional Commits specification:
