@@ -8,21 +8,31 @@ interface RunAppOptions {
 }
 
 export async function runApp(options: RunAppOptions = {}) {
-  // Start with checking status - render() immediately starts displaying
-  const { rerender } = render(<Cli status="checking" />);
+  // Check if we're in message-only mode and stdout is not a TTY (being redirected)
+  const isNonInteractive = options.messageOnly && !process.stdout.isTTY;
+  
+  // Only render UI if we're in an interactive terminal
+  const { rerender } = isNonInteractive ? 
+    { rerender: () => {} } : 
+    render(<Cli status="checking" />);
 
   try {
     const git = simpleGit();
     const diff = await git.diff({ "--cached": null });
 
     if (!diff) {
-      rerender(
-        <Cli
-          status="error"
-          error="You must stage changes before generating a commit message."
-        />,
-      );
-      setTimeout(() => process.exit(1), 1000);
+      if (isNonInteractive) {
+        console.error("You must stage changes before generating a commit message.");
+        process.exit(1);
+      } else {
+        rerender(
+          <Cli
+            status="error"
+            error="You must stage changes before generating a commit message."
+          />,
+        );
+        setTimeout(() => process.exit(1), 1000);
+      }
       return;
     }
 
@@ -35,14 +45,16 @@ export async function runApp(options: RunAppOptions = {}) {
     while (attempt <= maxAttempts && !msg) {
       try {
         // Update status based on attempt number
-        if (attempt === 1) {
-          rerender(<Cli status="generating" />);
-        } else {
-          rerender(<Cli
-            status="retrying"
-            attempt={attempt}
-            maxAttempts={maxAttempts}
-          />);
+        if (!isNonInteractive) {
+          if (attempt === 1) {
+            rerender(<Cli status="generating" />);
+          } else {
+            rerender(<Cli
+              status="retrying"
+              attempt={attempt}
+              maxAttempts={maxAttempts}
+            />);
+          }
         }
 
         msg = await commitMessage(diff);
@@ -66,20 +78,31 @@ export async function runApp(options: RunAppOptions = {}) {
     // Check if we successfully generated a message
     if (!msg) {
       const errorMessage = lastError?.message || "Unknown error occurred";
-      rerender(
-        <Cli
-          status="error"
-          error={`Failed to generate commit message after ${maxAttempts} attempts. Last error: ${errorMessage}`}
-        />,
-      );
-      setTimeout(() => process.exit(1), 2000);
+      if (isNonInteractive) {
+        console.error(`Failed to generate commit message after ${maxAttempts} attempts. Last error: ${errorMessage}`);
+        process.exit(1);
+      } else {
+        rerender(
+          <Cli
+            status="error"
+            error={`Failed to generate commit message after ${maxAttempts} attempts. Last error: ${errorMessage}`}
+          />,
+        );
+        setTimeout(() => process.exit(1), 2000);
+      }
       return;
     }
 
     if (options.messageOnly) {
-      // Show the generated message and exit
-      rerender(<Cli status="message-only" message={msg} />);
-      setTimeout(() => process.exit(0), 1500);
+      if (isNonInteractive) {
+        // Output just the plain message for git hooks
+        console.log(msg);
+        process.exit(0);
+      } else {
+        // Show the generated message and exit
+        rerender(<Cli status="message-only" message={msg} />);
+        setTimeout(() => process.exit(0), 1500);
+      }
     } else {
       // Update to committing status and show the message
       rerender(<Cli status="committing" message={`Commit message: ${msg}`} />);
@@ -97,13 +120,18 @@ export async function runApp(options: RunAppOptions = {}) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    rerender(
-      <Cli
-        status="error"
-        error={`Error: ${errorMessage}`}
-      />,
-    );
+    if (isNonInteractive) {
+      console.error(`Error: ${errorMessage}`);
+      process.exit(1);
+    } else {
+      rerender(
+        <Cli
+          status="error"
+          error={`Error: ${errorMessage}`}
+        />,
+      );
 
-    setTimeout(() => process.exit(1), 2000);
+      setTimeout(() => process.exit(1), 2000);
+    }
   }
 }
