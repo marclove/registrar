@@ -61,7 +61,7 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
           <Text color="green">✓ {getStatusText()}</Text>
         )}
         {!showSpinner && status === 'message-only' && (
-          <Text color="blue">✓ {getStatusText()}</Text>
+          <Text color="green">✓ {getStatusText()}</Text>
         )}
         {!showSpinner && status === 'error' && (
           <Text color="red">✗ {getStatusText()}</Text>
