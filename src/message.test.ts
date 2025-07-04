@@ -25,7 +25,7 @@ const mockProcessExit = vi.fn(() => {});
 const originalProcessExit = process.exit;
 const originalConsoleError = console.error;
 const originalConsoleDebug = console.debug;
-let createProviderSpy: ReturnType<typeof vi.spyOn>;
+let createProviderSpy: any;
 
 beforeEach(() => {
   // Mock process.exit to prevent tests from actually exiting

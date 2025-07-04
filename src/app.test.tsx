@@ -34,7 +34,7 @@ vi.mock("simple-git", () => ({
 
 describe("runApp", () => {
   const mockCommitMessage = vi.fn(() => Promise.resolve("feat: add new feature"));
-  let commitMessageSpy: ReturnType<typeof vi.spyOn>;
+  let commitMessageSpy: any;
 
   // Mock modules for runApp tests
   vi.mock("ink-spinner", () => ({
@@ -67,7 +67,7 @@ describe("runApp", () => {
 
     // Spy on the default export of message.js
     commitMessageSpy = vi.spyOn(message, "default").mockImplementation(
-      mockCommitMessage,
+      mockCommitMessage as any,
     );
 
     // Clear all mocks
