@@ -19,8 +19,8 @@ Here's a summary of the Conventional Commits specification:
 4. The description should be a short summary of the code changes
 5. A longer commit body may be provided after the short description
 6. Footer(s) may be provided one blank line after the body
-7. Breaking changes must be indicated by "!" after the type/scope,
-   or "BREAKING CHANGE:" in the footer
+7. Breaking changes must be indicated by "!" after the type/scope, and
+   "BREAKING CHANGE:" in the footer
 
 Now, analyze the following git diff:
 
@@ -36,7 +36,11 @@ To write an appropriate commit message:
 4. If applicable, determine a relevant scope
 5. Write a concise description of the changes
 6. If necessary, add a more detailed explanation in the commit body
-7. Include any relevant footer information, especially for breaking changes
+7. Think deeply about the changes and whether they are only backwards compatible
+   feature additions OR include breaking changes for the user. It is critical
+   that breaking changes are indicated by "!" after the type/scope and
+   "BREAKING CHANGE:" in the footer.
+8. Include any relevant footer information, especially for breaking changes.
 
 Your task is to write a commit message that follows the Conventional Commits
 specification based on the provided git diff. The commit message should
