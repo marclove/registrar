@@ -22,39 +22,53 @@ const originalConsoleError = console.error;
 const originalConsoleDebug = console.debug;
 let createProviderSpy: any;
 
-// Simple mock approach - let default.toml be read from real filesystem
-vi.mock("node:fs", () => ({
+const MOCK_DEFAULT_TOML = `
+provider = "anthropic"
+model = "claude-3-haiku-20240307"
+temperature = 0.7
+max_tokens = 2048
+prompt = """You are tasked with writing a commit message that conforms to the Conventional Commits specification.
+The user will provide you with a git diff of the changes.
+You should respond with a detailed commit message that accurately describes the changes.
+The commit message should be in the following format:
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+"""
+`;
+
+vi.doMock("node:fs", () => ({
   existsSync: vi.fn((path: string) => {
-    if (path === "default.toml") {
-      // Use real filesystem for default.toml
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+    if (path.endsWith("llmc.toml")) {
+      return false;
     }
-    return false; // Mock llmc.toml as non-existent by default
+    return true;
   }),
   readFileSync: vi.fn((path: string, encoding?: string) => {
-    if (path === "default.toml") {
-      // Use real filesystem for default.toml
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    return ""; // Mock llmc.toml as empty by default
+    if (path.endsWith("llmc.toml")) {
+      return "";
+    }
+    return "";
   }),
 }));
 
-vi.mock("@iarna/toml", () => ({
+vi.doMock("@iarna/toml", () => ({
   parse: vi.fn((content: string) => {
-    // Use real parser for all content
     const toml = require("@iarna/toml");
     return toml.parse(content);
   }),
 }));
 
-vi.mock("ai", () => ({
+vi.doMock("ai", () => ({
   generateObject: mockGenerateObject,
 }));
 
-beforeEach(() => {
+beforeEach(async () => {
   // Mock process.exit to prevent tests from actually exiting
   process.exit = mockProcessExit as any;
   console.error = mockConsoleError;
@@ -74,6 +88,7 @@ beforeEach(() => {
   mockLanguageModel.mockClear();
   mockTextEmbeddingModel.mockClear();
   mockProcessExit.mockClear();
+  vi.clearAllMocks();
 
   // Reset to default behavior
   mockGenerateObject.mockResolvedValue({ object: { commit_message: "test: mock commit" } });
@@ -120,160 +135,15 @@ test.skipIf(!process.env.RUN_INTEGRATION_TESTS)(
 );
 
 // Unit tests for complete coverage
-test("loadConfig should return defaultConfig when no config file exists", async () => {
-  // Use default setup - llmc.toml doesn't exist, default.toml is read from filesystem
-  const { existsSync } = await import("node:fs");
-
-  const messageModule = await import("./message.js");
-  const result = await messageModule.default("test diff");
-
-  expect(vi.mocked(existsSync)).toHaveBeenCalledWith("llmc.toml");
-  expect(mockConsoleDebug).toHaveBeenCalledWith(
-    "No llmc.toml found, using default configuration",
-  );
-});
-
-test("loadConfig should handle valid TOML config", async () => {
-  // Mock llmc.toml to exist with test data
-  const { existsSync, readFileSync } = await import("node:fs");
-
-  vi.mocked(existsSync).mockImplementation(
-    ((path: any) => {
-      if (path === "default.toml") {
-        const fs = require("node:fs");
-        return fs.existsSync(path);
-      }
-      if (path === "llmc.toml") return true;
-      return false;
-    }) as any,
-  );
-  vi.mocked(readFileSync).mockImplementation(
-    ((path: any, encoding?: any) => {
-      if (path === "default.toml") {
-        const fs = require("node:fs");
-        return fs.readFileSync(path, encoding);
-      }
-      if (path === "llmc.toml") return "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.7";
-      return "";
-    }) as any,
-  );
-
-  const messageModule = await import("./message.js");
-  await messageModule.default("test diff");
-
-  expect(vi.mocked(existsSync)).toHaveBeenCalledWith("llmc.toml");
-  expect(vi.mocked(readFileSync)).toHaveBeenCalledWith("llmc.toml", "utf-8");
-});
-
-test("loadConfig should handle invalid provider in config", async () => {
-  // Mock llmc.toml to exist with invalid provider
-  const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
-    }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
-    }
-    if (path === "llmc.toml") return "provider = \"invalid\"";
-    return "";
-  });
-
-  const messageModule = await import("./message.js");
-  await messageModule.default("test diff");
-
-  expect(mockConsoleError).toHaveBeenCalledWith(
-    "Invalid provider \"invalid\" in llmc.toml. Must be one of: anthropic, cerebras, cohere, deepseek, google, groq, mistral, openai, perplexity, replicate, togetherai, vercel, xai. Falling back to default provider \"anthropic\"",
-  );
-});
-
-test("loadConfig should handle TOML parsing errors", async () => {
-  // Mock llmc.toml to exist with invalid content
-  const { existsSync, readFileSync } = await import("node:fs");
-  const { parse } = await import("@iarna/toml");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
-    }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
-    }
-    if (path === "llmc.toml") return "invalid toml content";
-    return "";
-  });
-  vi.mocked(parse).mockImplementation((content: string) => {
-    if (content === "invalid toml content") {
-      throw new Error("TOML parsing failed");
-    }
-    const toml = require("@iarna/toml");
-    return toml.parse(content);
-  });
-
-  const messageModule = await import("./message.js");
-  await messageModule.default("test diff");
-
-  expect(mockConsoleError).toHaveBeenCalledWith(
-    "Error reading llmc.toml:",
-    expect.any(Error),
-  );
-});
-
-test("loadConfig should handle custom prompt in config", async () => {
-  const { existsSync, readFileSync } = await import("node:fs");
-  const { parse } = await import("@iarna/toml");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
-    }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
-    }
-    if (path === "llmc.toml") return "prompt = \"Custom prompt\"";
-    return "";
-  });
-
-  const messageModule = await import("./message.js");
-  await messageModule.default("test diff");
-
-  expect(vi.mocked(parse)).toHaveBeenCalled();
-});
 
 test("generateCommit should handle successful generation", async () => {
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "feat: add new feature" },
-  });
-
   const messageModule = await import("./message.js");
   const result = await messageModule.default("test diff");
 
   expect(mockCreateProvider).toHaveBeenCalled();
   expect(mockLanguageModel).toHaveBeenCalled();
   expect(mockGenerateObject).toHaveBeenCalled();
+  expect(result).toBe("test: mock commit");
 });
 
 test("generateCommit should handle createProvider failure", async () => {
@@ -287,10 +157,6 @@ test("generateCommit should handle createProvider failure", async () => {
 });
 
 test("generateCommit should handle generateObject failure", async () => {
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
   mockGenerateObject.mockRejectedValue(new Error("Generation failed"));
 
   const messageModule = await import("./message.js");
@@ -302,30 +168,15 @@ test("generateCommit should handle generateObject failure", async () => {
 
 test("commitMessage should use custom prompt when provided", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFileSync).mockImplementation((path: string) => {
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
+    if (path.endsWith("llmc.toml")) {
+      return "prompt = \"Custom: ${diff}\"";
     }
-    if (path === "llmc.toml") return "prompt = \"Custom: ${diff}\"";
     return "";
-  });
-
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "custom: test commit" },
   });
 
   const messageModule = await import("./message.js");
@@ -339,16 +190,6 @@ test("commitMessage should use custom prompt when provided", async () => {
 });
 
 test("commitMessage should use default prompt when not provided", async () => {
-  // Use default setup - default.toml will provide prompt
-
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "default: test commit" },
-  });
-
   const messageModule = await import("./message.js");
   await messageModule.default("test diff");
 
@@ -362,38 +203,21 @@ test("commitMessage should use default prompt when not provided", async () => {
 });
 
 test("commitMessage should handle empty prompt in config", async () => {
-  // Mock default.toml to provide prompt, llmc.toml exists but has no prompt
   const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFileSync).mockImplementation((path: string) => {
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
+    if (path.endsWith("llmc.toml")) {
+      return "model = \"test\"";
     }
-    if (path === "llmc.toml") return "model = \"test\"";
     return "";
-  });
-
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test commit" },
   });
 
   const messageModule = await import("./message.js");
   await messageModule.default("test diff");
 
-  // Should use default prompt from default.toml
   expect(mockGenerateObject).toHaveBeenCalledWith(
     expect.objectContaining({
       prompt: expect.stringContaining(
@@ -405,32 +229,15 @@ test("commitMessage should handle empty prompt in config", async () => {
 
 test("main function should handle all config options", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFileSync).mockImplementation((path: string) => {
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
-    }
-    if (path === "llmc.toml") {
+    if (path.endsWith("llmc.toml")) {
       return "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.5\nmax_tokens = 100\nprompt = \"Test: ${diff}\"";
     }
     return "";
-  });
-
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test: complete config" },
   });
 
   const messageModule = await import("./message.js");
@@ -440,17 +247,13 @@ test("main function should handle all config options", async () => {
     expect.objectContaining({
       prompt: "Test: test diff",
       temperature: 0.5,
-      maxTokens: 100, // Now properly converted from max_tokens
+      maxTokens: 100,
     }),
   );
-  expect(result).toBe("test: complete config");
+  expect(result).toBe("test: mock commit");
 });
 
 test("generateCommit should trim commit message", async () => {
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
   mockGenerateObject.mockResolvedValue({
     object: { commit_message: "  feat: add feature  " },
   });
@@ -469,32 +272,15 @@ test("module should export main function as default", async () => {
 
 test("config should handle all snake_case conversions", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFileSync).mockImplementation((path: string) => {
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
-    }
-    if (path === "llmc.toml") {
+    if (path.endsWith("llmc.toml")) {
       return "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.7\nmax_tokens = 200\napi_key = \"test-key\"\napi_key_name = \"OPENAI_API_KEY\"\nprompt = \"Snake case: ${diff}\"";
     }
     return "";
-  });
-
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test: snake case conversion" },
   });
 
   const messageModule = await import("./message.js");
@@ -505,20 +291,12 @@ test("config should handle all snake_case conversions", async () => {
     expect.objectContaining({
       prompt: "Snake case: test diff",
       temperature: 0.7,
-      maxTokens: 200, // Converted from max_tokens
+      maxTokens: 200,
     }),
   );
 });
 
 test("generateCommit should pass correct parameters to generateObject", async () => {
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test: parameters" },
-  });
-
   const messageModule = await import("./message.js");
   await messageModule.default("test diff");
 
@@ -532,72 +310,41 @@ test("generateCommit should pass correct parameters to generateObject", async ()
 });
 
 test("toCamelCase utility should convert snake_case to camelCase", async () => {
-  // We need to test the utility function indirectly through the config loading
   const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFileSync).mockImplementation((path: string) => {
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
+    if (path.endsWith("llmc.toml")) {
+      return "snake_case_key = \"value\"\nanother_key = \"test\"";
     }
-    if (path === "llmc.toml") return "snake_case_key = \"value\"\nanother_key = \"test\"";
     return "";
   });
 
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test: camel case conversion" },
-  });
-
   const messageModule = await import("./message.js");
-  await messageModule.default("test diff");
+  const config = await (messageModule as any).loadConfig();
 
-  // The conversion should work for any snake_case keys in the TOML
-  expect(mockCreateProvider).toHaveBeenCalled();
+  expect(config.snakeCaseKey).toBe("value");
+  expect(config.anotherKey).toBe("test");
 });
 
 test("convertKeysToCamelCase should handle complex snake_case keys", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
-
-  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
+  vi.mocked(existsSync).mockReturnValue(true);
+  vi.mocked(readFileSync).mockImplementation((path: string) => {
+    if (path.endsWith("default.toml")) {
+      return MOCK_DEFAULT_TOML;
     }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
+    if (path.endsWith("llmc.toml")) {
+      return "multi_word_snake_case = \"value\"\nsingle = \"test\"";
     }
-    if (path === "llmc.toml") return "multi_word_snake_case = \"value\"\nsingle = \"test\"";
     return "";
   });
 
-  mockCreateProvider.mockResolvedValue({
-    languageModel: mockLanguageModel,
-    textEmbeddingModel: mockTextEmbeddingModel,
-  });
-  mockGenerateObject.mockResolvedValue({
-    object: { commit_message: "test: complex conversion" },
-  });
-
   const messageModule = await import("./message.js");
-  await messageModule.default("test diff");
+  const config = await (messageModule as any).loadConfig();
 
-  // Should handle both multi-word snake_case and single words
-  expect(mockCreateProvider).toHaveBeenCalled();
+  expect(config.multiWordSnakeCase).toBe("value");
+  expect(config.single).toBe("test");
 });

@@ -16,7 +16,7 @@ function getVersion(): string {
   return packageJson.version;
 }
 
-async function main() {
+export async function main() {
   const argv = await yargs(hideBin(process.argv))
     .scriptName("llmc")
     .usage("Usage: llmc [command] [options]")
@@ -48,6 +48,7 @@ async function main() {
       "boolean-negation": false,
     })
     .demandCommand(0, 1, "", "No command provided, proceeding with default action.")
+    .fail(false)
     .argv;
 
   const messageOnly = argv["no-commit"] || argv["message-only"];

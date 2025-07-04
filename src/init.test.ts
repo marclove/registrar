@@ -5,7 +5,7 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 
 const tmpDir = join(__dirname, "tmp", "init-test");
 const distDir = resolve(__dirname, "..", "dist");
-const defaultTomlPath = resolve(__dirname, "..", "default.toml");
+const defaultTomlPath = resolve(__dirname, "..", "public", "default.toml");
 
 beforeAll(async () => {
   await execa("npm", ["run", "build"]);

@@ -2,6 +2,8 @@ import type { LanguageModelV1 } from "@ai-sdk/provider";
 import { parse } from "@iarna/toml";
 import { generateObject } from "ai";
 import { existsSync, readFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { type RuntimeConfig, type TomlConfigSchema } from "./config.js";
 import { createProvider, type ProviderName, providers } from "./providers.js";
@@ -31,7 +33,6 @@ async function generateCommit(
 }
 
 const configFileName = "llmc.toml";
-const defaultConfigFileName = "default.toml";
 
 /**
  * Convert snake_case string to camelCase
@@ -43,7 +44,9 @@ function toCamelCase(str: string): string {
 /**
  * Convert an object with snake_case keys to camelCase keys
  */
-function convertKeysToCamelCase<T extends Record<string, any>>(obj: T): Record<string, any> {
+function convertKeysToCamelCase<T extends Record<string, any>>(
+  obj: T,
+): Record<string, any> {
   const result: Record<string, any> = {};
   for (const [key, value] of Object.entries(obj)) {
     const camelKey = toCamelCase(key);
@@ -57,18 +60,22 @@ function convertKeysToCamelCase<T extends Record<string, any>>(obj: T): Record<s
  */
 function loadDefaultConfig(): RuntimeConfig {
   try {
-    const defaultConfigContent = readFileSync(defaultConfigFileName, "utf-8");
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const defaultConfigPath = path.resolve(__dirname, "default.toml");
+    const defaultConfigContent = readFileSync(defaultConfigPath, "utf-8");
     const defaultTomlConfig = parse(defaultConfigContent) as TomlConfigSchema;
     return convertKeysToCamelCase(defaultTomlConfig) as RuntimeConfig;
   } catch (error) {
-    throw new Error(`Failed to load default configuration from ${defaultConfigFileName}: ${error}`);
+    throw new Error(
+      `Failed to load default configuration from internal path: ${error}`,
+    );
   }
 }
 
 /**
  * Load configuration from llmc.toml file merged with defaults from default.toml
  */
-async function loadConfig(): Promise<RuntimeConfig> {
+export async function loadConfig(): Promise<RuntimeConfig> {
   const defaultConfig = loadDefaultConfig();
 
   if (!existsSync(configFileName)) {

@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 export async function runInit() {
-  const sourcePath = join(__dirname, "../default.toml");
+  const sourcePath = join(__dirname, "default.toml");
   const destPath = join(process.cwd(), "llmc.toml");
 
   if (existsSync(destPath)) {

@@ -5,10 +5,12 @@ import { type RuntimeConfig, type TomlConfigSchema } from "./config.js";
 
 const testConfigPath = "test-llmc.toml";
 
-test("default.toml should exist and have correct structure", () => {
-  expect(existsSync("default.toml")).toBeTruthy();
+const defaultConfigPath = "public/default.toml";
 
-  const defaultConfigContent = readFileSync("default.toml", "utf-8");
+test("default.toml should exist and have correct structure", () => {
+  expect(existsSync(defaultConfigPath)).toBeTruthy();
+
+  const defaultConfigContent = readFileSync(defaultConfigPath, "utf-8");
   const defaultConfig = parse(defaultConfigContent) as any;
 
   expect(defaultConfig.provider).toBe("anthropic");
@@ -20,7 +22,7 @@ test("default.toml should exist and have correct structure", () => {
 });
 
 test("default.toml prompt should have correct content", () => {
-  const defaultConfigContent = readFileSync("default.toml", "utf-8");
+  const defaultConfigContent = readFileSync(defaultConfigPath, "utf-8");
   const defaultConfig = parse(defaultConfigContent) as any;
   const prompt = defaultConfig.prompt;
 
@@ -86,9 +88,9 @@ test("snake_case conversion should work correctly", () => {
 });
 
 test("default.toml should be readable and parseable", () => {
-  expect(existsSync("default.toml")).toBeTruthy();
+  expect(existsSync(defaultConfigPath)).toBeTruthy();
 
-  const defaultConfigContent = readFileSync("default.toml", "utf-8");
+  const defaultConfigContent = readFileSync(defaultConfigPath, "utf-8");
   expect(() => parse(defaultConfigContent)).not.toThrow();
 
   const defaultConfig = parse(defaultConfigContent) as any;
