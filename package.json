@@ -1,6 +1,6 @@
 {
-  "name": "@marcslove/registrar",
-  "version": "0.1.4",
+  "name": "llmc",
+  "version": "0.1.0",
   "description": "AI-powered commit message generator",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -18,7 +18,7 @@
     "typescript": "^5"
   },
   "bin": {
-    "registrar": "./dist/index.js"
+    "llmc": "./dist/index.js"
   },
   "type": "module",
   "files": [
@@ -65,9 +65,9 @@
     "zod": "^3.25.69"
   },
   "author": "",
-  "license": "MIT",
+  "license": "BSD 3-Clause",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/marclove/llmc"
   }
 }

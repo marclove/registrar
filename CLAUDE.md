@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Registrar is an AI-powered commit message generator that creates Conventional Commits-compliant messages from git diffs. It's a Node.js/TypeScript CLI tool that supports multiple AI providers (Anthropic, OpenAI, Google, etc.) and can be integrated with git hooks. The tool offers two modes: automatic commit mode (default) and message-only mode for git hook integration.
+llmc is an AI-powered commit message generator that creates Conventional Commits-compliant messages from git diffs. It's a Node.js/TypeScript CLI tool that supports multiple AI providers (Anthropic, OpenAI, Google, etc.) and can be integrated with git hooks. The tool offers two modes: automatic commit mode (default) and message-only mode for git hook integration.
 
 ## Architecture
 
@@ -112,7 +112,7 @@ The tool supports two operation modes:
 
 ### Default Mode (Automatic Commit)
 ```bash
-npx registrar
+npx llmc
 ```
 - Generates commit message from staged changes
 - Automatically commits the changes with the generated message
@@ -120,8 +120,8 @@ npx registrar
 
 ### Message-Only Mode (Git Hook Integration)
 ```bash
-npx registrar --message-only
-npx registrar --no-commit  # Same as --message-only
+npx llmc --message-only
+npx llmc --no-commit  # Same as --message-only
 ```
 - Generates commit message from staged changes
 - Displays the message without committing

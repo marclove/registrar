@@ -1,6 +1,6 @@
-# Registrar
+# llmc
 
-AI-powered commit message generator that follows Conventional Commits specification. Simply run `npx registrar` and it will automatically generate a commit message from your staged changes and commit them for you.
+AI-powered commit message generator that follows Conventional Commits specification. Simply run `npx llmc` and it will automatically generate a commit message from your staged changes and commit them for you.
 
 ## Features
 
@@ -22,13 +22,13 @@ AI-powered commit message generator that follows Conventional Commits specificat
 git add .
 
 # Generate commit message and commit automatically
-npx registrar
+npx llmc
 
 # Or just generate the message without committing (for git hooks)
-npx registrar --message-only
+npx llmc --message-only
 ```
 
-That's it! Registrar will:
+That's it! llmc will:
 1. ✅ Check for staged changes
 2. 🤖 Generate a commit message using AI
 3. 📝 Commit your changes with the generated message
@@ -37,7 +37,7 @@ That's it! Registrar will:
 ### Installation
 
 ```bash
-npm install -g registrar
+npm install -g llmc
 ```
 
 ## Configuration
@@ -94,8 +94,8 @@ export GOOGLE_API_KEY="your-api-key"
 For git hook integration, use the `--message-only` or `--no-commit` flags to generate commit messages without automatically committing:
 
 ```bash
-npx registrar --message-only
-npx registrar --no-commit  # Same as --message-only
+npx llmc --message-only
+npx llmc --no-commit  # Same as --message-only
 ```
 
 ### prepare-commit-msg Hook Setup
@@ -104,8 +104,8 @@ Create `.git/hooks/prepare-commit-msg`:
 
 ```bash
 #!/bin/sh
-# Generate commit message using Registrar
-npx registrar --message-only > "$1"
+# Generate commit message using llmc
+npx llmc --message-only > "$1"
 ```
 
 Make it executable:
@@ -113,7 +113,7 @@ Make it executable:
 chmod +x .git/hooks/prepare-commit-msg
 ```
 
-Now when you run `git commit`, Registrar will automatically generate the commit message for you.
+Now when you run `git commit`, llmc will automatically generate the commit message for you.
 
 ### commit-msg Hook Setup
 
@@ -123,7 +123,7 @@ For validation and generation combined:
 #!/bin/sh
 # Generate commit message if none provided
 if [ -z "$(cat $1 | grep -v '^#')" ]; then
-    npx registrar --message-only > "$1"
+    npx llmc --message-only > "$1"
 fi
 ```
 
@@ -136,10 +136,10 @@ fi
 git add .
 
 # Generate commit message and commit automatically
-npx registrar
+npx llmc
 
 # Generate message only (for git hooks)
-npx registrar --message-only
+npx llmc --message-only
 ```
 
 ### Custom Configuration
@@ -147,7 +147,7 @@ npx registrar --message-only
 ```bash
 # Use different provider
 echo 'provider = "openai"' > config.toml
-npx registrar
+npx llmc
 
 # Use custom prompt
 cat > config.toml << EOF
@@ -157,12 +157,12 @@ Create a commit message for this diff: \${diff}
 Make it concise and professional.
 """
 EOF
-npx registrar
+npx llmc
 ```
 
 ### Example Output
 
-When you run `npx registrar`, you'll see a beautiful progress interface:
+When you run `npx llmc`, you'll see a beautiful progress interface:
 
 ```
 ⠋ Checking for staged changes...
@@ -226,7 +226,7 @@ This separation allows for fast development cycles while ensuring comprehensive 
    ```
 
 3. **Generation Failures**
-   Registrar automatically retries up to 3 times if generation fails. You'll see:
+   llmc automatically retries up to 3 times if generation fails. You'll see:
    ```
    ⠋ Retrying commit message generation (attempt 2/3)...
    Previous attempt failed. Retrying... (1 failed attempts)
@@ -240,7 +240,7 @@ This separation allows for fast development cycles while ensuring comprehensive 
 
 ### Error Handling
 
-Registrar provides detailed error messages and visual feedback:
+llmc provides detailed error messages and visual feedback:
 - ✅ Green checkmark for success
 - ❌ Red X for errors
 - 🔄 Automatic retry with progress indicators
@@ -291,7 +291,7 @@ For maintainers, here's how to publish new versions to npm:
 #### npx Functionality
 
 The npx functionality is already fully configured in `package.json`:
-- ✅ `"bin": { "registrar": "./dist/index.js" }` - enables `npx registrar`
+- ✅ `"bin": { "llmc": "./dist/index.js" }` - enables `npx llmc`
 - ✅ `"main": "dist/index.js"` - sets the entry point
 - ✅ `"files": ["dist/"]` - includes built files in npm package
 - ✅ `"prepublishOnly": "npm run build"` - builds before publishing
