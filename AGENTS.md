@@ -59,7 +59,7 @@ llmc is an AI-powered commit message generator that creates Conventional Commits
 
 ## Configuration
 
-The application uses a `config.toml` file in the project root with these key settings:
+The application uses a `llmc.toml` file in the project root with these key settings:
 
 - `provider`: AI service to use (defaults to "anthropic")
 - `model`: Specific model name
@@ -74,7 +74,7 @@ The application uses a `config.toml` file in the project root with these key set
 The configuration uses **snake_case** naming in TOML files but is automatically converted to **camelCase** in TypeScript runtime:
 
 ```toml
-# config.toml (snake_case)
+# llmc.toml (snake_case)
 provider = "openai"
 max_tokens = 200
 api_key = "your-key"

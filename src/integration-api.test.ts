@@ -22,7 +22,7 @@ test("should use custom config when provided", async () => {
   await execa("git", ["config", "user.email", "test@example.com"], { cwd: gitDir });
   await execa("git", ["config", "user.name", "Test User"], { cwd: gitDir });
 
-  const testConfigFile = join(gitDir, "config.toml");
+  const testConfigFile = join(gitDir, "llmc.toml");
   const testConfig = `
 provider = "anthropic"
 model = "claude-sonnet-4-20250514"

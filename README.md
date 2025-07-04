@@ -49,7 +49,7 @@ npm install -g llmc
 
 ## Configuration
 
-Create a `config.toml` file in your project root:
+Create a `llmc.toml` file in your project root:
 
 ```toml
 provider = "anthropic"
@@ -154,11 +154,11 @@ npx llmc --message-only
 
 ```bash
 # Use different provider
-echo 'provider = "openai"' > config.toml
+echo 'provider = "openai"' > llmc.toml
 npx llmc
 
 # Use custom prompt
-cat > config.toml << EOF
+cat > llmc.toml << EOF
 provider = "anthropic"
 prompt = """
 Create a commit message for this diff: \${diff}

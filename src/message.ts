@@ -3,7 +3,7 @@ import { parse } from "@iarna/toml";
 import { generateObject } from "ai";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
-import { defaultConfig, defaultPrompt, type RuntimeConfig, type TomlConfigSchema } from "./config.js";
+import { type RuntimeConfig, type TomlConfigSchema } from "./config.js";
 import { createProvider, type ProviderName, providers } from "./providers.js";
 
 const schema = z.object({
@@ -30,7 +30,8 @@ async function generateCommit(
   return result.object.commit_message.trim();
 }
 
-const configFileName = "config.toml";
+const configFileName = "llmc.toml";
+const defaultConfigFileName = "default.toml";
 
 /**
  * Convert snake_case string to camelCase
@@ -52,11 +53,25 @@ function convertKeysToCamelCase<T extends Record<string, any>>(obj: T): Record<s
 }
 
 /**
- * Load configuration from config.toml file with fallback to defaults
+ * Load default configuration from default.toml file
+ */
+function loadDefaultConfig(): RuntimeConfig {
+  try {
+    const defaultConfigContent = readFileSync(defaultConfigFileName, "utf-8");
+    const defaultTomlConfig = parse(defaultConfigContent) as TomlConfigSchema;
+    return convertKeysToCamelCase(defaultTomlConfig) as RuntimeConfig;
+  } catch (error) {
+    throw new Error(`Failed to load default configuration from ${defaultConfigFileName}: ${error}`);
+  }
+}
+
+/**
+ * Load configuration from llmc.toml file merged with defaults from default.toml
  */
 async function loadConfig(): Promise<RuntimeConfig> {
+  const defaultConfig = loadDefaultConfig();
+
   if (!existsSync(configFileName)) {
-    console.debug(`No ${configFileName} found, using default configuration`);
     return defaultConfig;
   }
 
@@ -70,6 +85,8 @@ async function loadConfig(): Promise<RuntimeConfig> {
           providers.join(", ")
         }. Falling back to default provider "${defaultConfig.provider}"`,
       );
+      // Remove invalid provider so it doesn't override the default
+      delete tomlConfig.provider;
     }
 
     // Convert snake_case TOML keys to camelCase and merge with defaults
@@ -90,13 +107,9 @@ async function commitMessage(
   diff: string,
   config: RuntimeConfig,
 ): Promise<string> {
-  let promptText: string;
+  // The prompt should always be available from default.toml
+  const promptText = config.prompt?.replace(/\$\{diff\}/g, diff) || "";
 
-  if (config.prompt) {
-    promptText = config.prompt.replace(/\$\{diff\}/g, diff);
-  } else {
-    promptText = defaultPrompt(diff);
-  }
   return await generateCommit(
     config.provider,
     config.model,
