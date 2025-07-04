@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(grep:./*)",
+      "Bash(ls:./*)",
+      "Bash(./package/dist/index.js:*)",
+      "Bash(./node_modules/.bin:*)",
+      "WebFetch(domain:ai-sdk.dev)",
+      "WebFetch(domain:yargs.js.org)",
+      "WebFetch(domain:github.com)",
+      "mcp__ide__getDiagnostics"
+    ],
+    "deny": []
+  }
+}
