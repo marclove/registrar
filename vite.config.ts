@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import { chmodSync } from 'node:fs';
+import { join } from 'node:path';
 import pkg from './package.json';
 
 // Automatically externalize dependencies and peerDependencies
@@ -11,7 +13,17 @@ const externalPackages = [
   'node:url',
 ];
 
+// Custom plugin to make built binary executable
+const makeExecutablePlugin = () => ({
+  name: 'make-executable',
+  writeBundle() {
+    const binPath = join(process.cwd(), 'dist', 'index.js');
+    chmodSync(binPath, 0o755);
+  }
+});
+
 export default defineConfig({
+  plugins: [makeExecutablePlugin()],
   build: {
     outDir: 'dist',
     rollupOptions: {
