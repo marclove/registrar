@@ -51,14 +51,14 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
 
   return (
     <Box flexDirection="column">
-      <Box>
+      <Box flexDirection="row">
         {showSpinner && (
-          <Text>
+          <Text color="cyan">
             <Spinner type="dots" /> {getStatusText()}
           </Text>
         )}
         {!showSpinner && status === 'success' && (
-          <Text color="cyan">✓ {getStatusText()}</Text>
+          <Text color="green">✓ {getStatusText()}</Text>
         )}
         {!showSpinner && status === 'message-only' && (
           <Text color="blue">✓ {getStatusText()}</Text>
@@ -66,13 +66,12 @@ export default function Cli({ status, message, error, attempt, maxAttempts }: Cl
         {!showSpinner && status === 'error' && (
           <Text color="red">✗ {getStatusText()}</Text>
         )}
+        {showTimer && (
+          <Box marginLeft={1}>
+            <Text color="gray">Time elapsed: {seconds}s</Text>
+          </Box>
+        )}
       </Box>
-
-      {showTimer && (
-        <Box marginTop={1}>
-          <Text color="gray">Time elapsed: {seconds}s</Text>
-        </Box>
-      )}
 
       {status === 'retrying' && attempt && maxAttempts && (
         <Box marginTop={1}>
