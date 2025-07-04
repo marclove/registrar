@@ -189,11 +189,17 @@ Commit message: feat(components): add new Button component with accessibility fe
 # Install dependencies
 npm install
 
-# Build the project
+# Format code
+npm run format
+
+# Build the project (includes formatting)
 npm run build
 
 # Run tests (excludes API integration tests)
 npm test
+
+# Run tests in watch mode
+npm run test:watch
 
 # Run API integration tests (requires valid API key)
 npm run test:integration

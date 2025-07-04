@@ -165,6 +165,9 @@ The CLI interface uses React with ink to provide rich terminal interactions:
 ## Code Quality and Linting
 
 - **Build Validation**: TypeScript compilation catches type errors during build process
+- **Code Formatting**: Uses dprint for consistent code formatting across TypeScript, JSON, Markdown, and TOML files
+- **Format Scripts**: `npm run format` formats all files, automatically run before build and test commands
+- **VSCode Integration**: Configured to use dprint formatter with format-on-save enabled
 
 ## Message Generation Implementation
 
