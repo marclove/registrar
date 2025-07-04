@@ -1,7 +1,31 @@
+import { copyFileSync, existsSync } from "fs";
 import { render } from "ink";
+import { dirname, join } from "path";
 import simpleGit from "simple-git";
+import { fileURLToPath } from "url";
 import Cli from "./cli.js";
 import commitMessage from "./message.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+export async function runInit() {
+  const sourcePath = join(__dirname, "../default.toml");
+  const destPath = join(process.cwd(), "llmc.toml");
+
+  if (existsSync(destPath)) {
+    console.error("llmc.toml already exists in the current directory.");
+    process.exit(1);
+  }
+
+  try {
+    copyFileSync(sourcePath, destPath);
+    console.log("llmc.toml created successfully.");
+  } catch (error) {
+    console.error("Failed to create llmc.toml:", error);
+    process.exit(1);
+  }
+}
 
 interface RunAppOptions {
   messageOnly?: boolean;

@@ -18,6 +18,9 @@ AI-powered commit message generator that follows Conventional Commits specificat
 ### Using npx (Recommended)
 
 ```bash
+# Initialize a configuration file (optional)
+npx llmc init
+
 # Stage your changes
 git add .
 
@@ -49,7 +52,15 @@ npm install -g llmc
 
 ## Configuration
 
-Create a `llmc.toml` file in your project root:
+To configure llmc, you can create a `llmc.toml` file in your project root. The easiest way to get started is to run the `init` command:
+
+```bash
+npx llmc init
+```
+
+This will create a `llmc.toml` file with the default settings, which you can then customize.
+
+Here's an example of a `llmc.toml` file:
 
 ```toml
 provider = "anthropic"

@@ -136,6 +136,15 @@ npx llmc --no-commit  # Same as --message-only
 - Shows progress through: checking → generating → message-only
 - Perfect for git hook integration (prepare-commit-msg, commit-msg)
 
+### Init Mode (Configuration)
+
+```bash
+npx llmc init
+```
+
+- Copies the `default.toml` file to the current working directory as `llmc.toml`.
+- This allows users to easily customize the default configuration.
+
 ### Command Line Argument Parsing
 
 - `index.ts` uses yargs for robust CLI argument parsing with automatic help generation
