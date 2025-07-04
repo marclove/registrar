@@ -4,7 +4,7 @@ import { join, resolve } from 'path';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 
 const tmpDir = join(__dirname, 'tmp', 'integration-test');
-const distDir = resolve(__dirname, 'dist');
+const distDir = resolve(__dirname, '..', 'dist');
 
 beforeAll(async () => {
   await execa('npm', ['run', 'build']);
