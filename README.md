@@ -321,14 +321,3 @@ For maintainers, here's how to publish new versions to npm:
    ```bash
    git push origin main --tags
    ```
-
-#### npx Functionality
-
-The npx functionality is already fully configured in `package.json`:
-
-- ✅ `"bin": { "llmc": "./dist/index.js" }` - enables `npx llmc`
-- ✅ `"main": "dist/index.js"` - sets the entry point
-- ✅ `"files": ["dist/"]` - includes built files in npm package
-- ✅ `"prepublishOnly": "npm run build"` - builds before publishing
-
-No additional setup is needed for npx functionality - it works automatically once the package is published to npm.
