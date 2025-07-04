@@ -1,6 +1,6 @@
 {
   "name": "llmc",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "AI-powered commit message generator",
   "main": "dist/index.js",
   "module": "dist/index.js",
