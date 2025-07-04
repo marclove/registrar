@@ -279,7 +279,7 @@ llmc provides detailed error messages and visual feedback:
 
 ## License
 
-MIT License - see LICENSE file for details.
+BSD 3-Clause License - see LICENSE file for details.
 
 ## Contributing
 
