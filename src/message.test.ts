@@ -137,22 +137,26 @@ test("loadConfig should handle valid TOML config", async () => {
   // Mock llmc.toml to exist with test data
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.existsSync(path);
-    }
-    if (path === "llmc.toml") return true;
-    return false;
-  });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
-    if (path === "default.toml") {
-      const fs = require("node:fs");
-      return fs.readFileSync(path, encoding);
-    }
-    if (path === "llmc.toml") return "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.7";
-    return "";
-  });
+  vi.mocked(existsSync).mockImplementation(
+    ((path: any) => {
+      if (path === "default.toml") {
+        const fs = require("node:fs");
+        return fs.existsSync(path);
+      }
+      if (path === "llmc.toml") return true;
+      return false;
+    }) as any,
+  );
+  vi.mocked(readFileSync).mockImplementation(
+    ((path: any, encoding?: any) => {
+      if (path === "default.toml") {
+        const fs = require("node:fs");
+        return fs.readFileSync(path, encoding);
+      }
+      if (path === "llmc.toml") return "provider = \"openai\"\nmodel = \"gpt-4\"\ntemperature = 0.7";
+      return "";
+    }) as any,
+  );
 
   const messageModule = await import("./message.js");
   await messageModule.default("test diff");
@@ -165,7 +169,7 @@ test("loadConfig should handle invalid provider in config", async () => {
   // Mock llmc.toml to exist with invalid provider
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -173,7 +177,7 @@ test("loadConfig should handle invalid provider in config", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -195,7 +199,7 @@ test("loadConfig should handle TOML parsing errors", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
   const { parse } = await import("@iarna/toml");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -203,7 +207,7 @@ test("loadConfig should handle TOML parsing errors", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -232,7 +236,7 @@ test("loadConfig should handle custom prompt in config", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
   const { parse } = await import("@iarna/toml");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -240,7 +244,7 @@ test("loadConfig should handle custom prompt in config", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -299,7 +303,7 @@ test("generateCommit should handle generateObject failure", async () => {
 test("commitMessage should use custom prompt when provided", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -307,7 +311,7 @@ test("commitMessage should use custom prompt when provided", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -361,7 +365,7 @@ test("commitMessage should handle empty prompt in config", async () => {
   // Mock default.toml to provide prompt, llmc.toml exists but has no prompt
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -369,7 +373,7 @@ test("commitMessage should handle empty prompt in config", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -402,7 +406,7 @@ test("commitMessage should handle empty prompt in config", async () => {
 test("main function should handle all config options", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -410,7 +414,7 @@ test("main function should handle all config options", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -466,7 +470,7 @@ test("module should export main function as default", async () => {
 test("config should handle all snake_case conversions", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -474,7 +478,7 @@ test("config should handle all snake_case conversions", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -531,7 +535,7 @@ test("toCamelCase utility should convert snake_case to camelCase", async () => {
   // We need to test the utility function indirectly through the config loading
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -539,7 +543,7 @@ test("toCamelCase utility should convert snake_case to camelCase", async () => {
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
@@ -566,7 +570,7 @@ test("toCamelCase utility should convert snake_case to camelCase", async () => {
 test("convertKeysToCamelCase should handle complex snake_case keys", async () => {
   const { existsSync, readFileSync } = await import("node:fs");
 
-  vi.mocked(existsSync).mockImplementation((path: string) => {
+  (vi.mocked(existsSync) as any).mockImplementation((path: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.existsSync(path);
@@ -574,7 +578,7 @@ test("convertKeysToCamelCase should handle complex snake_case keys", async () =>
     if (path === "llmc.toml") return true;
     return false;
   });
-  vi.mocked(readFileSync).mockImplementation((path: string, encoding?: string) => {
+  (vi.mocked(readFileSync) as any).mockImplementation((path: any, encoding?: any) => {
     if (path === "default.toml") {
       const fs = require("node:fs");
       return fs.readFileSync(path, encoding);
