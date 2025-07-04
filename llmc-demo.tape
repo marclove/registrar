@@ -11,7 +11,7 @@ Set FontSize 24
 Set FontFamily "CaskaydiaCove Nerd Font"
 Set LineHeight 1.5
 Set TypingSpeed 100ms
-Set Theme "TokyoNightStorm"
+Set Theme "Pandora"
 Set Margin 60
 Set WindowBar Colorful
 Set Margin 20
@@ -43,15 +43,7 @@ Show
 # Create a new TypeScript source file with some content using a HEREDOC.
 Type "cat << 'EOF' > index.ts"
 Enter
-Type "function greet(name: string): string {"
-Enter
-Type "  return `Hello, ${name}!`;"
-Enter
-Type "}"
-Enter
-Type ""
-Enter
-Type "console.log(greet('world'));"
+Type "function greet(name: string): string { return `Hello, ${name}!` }"
 Enter
 Type "EOF"
 Enter
