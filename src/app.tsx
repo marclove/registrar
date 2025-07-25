@@ -5,6 +5,7 @@ import simpleGit from "simple-git";
 import { fileURLToPath } from "url";
 import Cli from "./cli.js";
 import commitMessage from "./message.js";
+import { EnhancedGit, validateGitState } from "./git-utils.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -41,24 +42,31 @@ export async function runApp(options: RunAppOptions = {}) {
     : render(<Cli status="checking" />);
 
   try {
-    const git = simpleGit();
-    const diff = await git.diff({ "--cached": null });
-
-    if (!diff) {
+    // Validate git state with enhanced error messages
+    const gitValidation = await validateGitState();
+    if (!gitValidation.isValid) {
+      const errorMessage = gitValidation.details 
+        ? `${gitValidation.message}${gitValidation.details}`
+        : gitValidation.message;
+        
       if (isNonInteractive) {
-        console.error("You must stage changes before generating a commit message.");
+        console.error(errorMessage);
         process.exit(1);
       } else {
         rerender(
           <Cli
             status="error"
-            error="You must stage changes before generating a commit message."
+            error={errorMessage}
           />,
         );
         setTimeout(() => process.exit(1), 1000);
       }
       return;
     }
+
+    // Get staged diff using enhanced git wrapper
+    const enhancedGit = new EnhancedGit();
+    const diff = await enhancedGit.getStagedDiff();
 
     // Retry logic for commit message generation
     const maxAttempts = 3;
@@ -133,7 +141,7 @@ export async function runApp(options: RunAppOptions = {}) {
       // Update to committing status and show the message
       rerender(<Cli status="committing" message={`Commit message: ${msg}`} />);
 
-      await git.commit(msg);
+      await enhancedGit.commit(msg);
 
       // Show success
       rerender(
