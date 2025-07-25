@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatGitError, type GitError } from "./git-utils.js";
+import { formatGitError, validateGitState, type GitError } from "./git-utils.js";
 
 describe("git-utils", () => {
   describe("formatGitError", () => {
@@ -76,6 +76,21 @@ describe("git-utils", () => {
       );
     });
 
+    it("should format pre-commit hook failure with file path", () => {
+      const error: GitError = {
+        name: "GitError",
+        message: "original message",
+        stderr: "error in .git/hooks/pre-commit",
+        command: "git commit",
+        exitCode: 1,
+      };
+      
+      const formatted = formatGitError(error);
+      expect(formatted).toBe(
+        "Commit failed due to a pre-commit hook. Please resolve the issues and try again. Original error: error in .git/hooks/pre-commit"
+      );
+    });
+
     it("should format commit-msg hook failure", () => {
       const error: GitError = {
         name: "GitError",
@@ -88,6 +103,36 @@ describe("git-utils", () => {
       const formatted = formatGitError(error);
       expect(formatted).toBe(
         "Commit failed due to a commit-msg hook. Please resolve the issues and try again. Original error: commit-msg hook failed"
+      );
+    });
+
+    it("should format prepare-commit-msg hook failure", () => {
+      const error: GitError = {
+        name: "GitError",
+        message: "original message",
+        stderr: "error in .git/hooks/prepare-commit-msg",
+        command: "git commit",
+        exitCode: 1,
+      };
+      
+      const formatted = formatGitError(error);
+      expect(formatted).toBe(
+        "Commit failed due to a prepare-commit-msg hook. Please resolve the issues and try again. Original error: error in .git/hooks/prepare-commit-msg"
+      );
+    });
+
+    it("should format post-commit hook failure", () => {
+      const error: GitError = {
+        name: "GitError",
+        message: "original message",
+        stderr: "error in .git/hooks/post-commit",
+        command: "git commit",
+        exitCode: 1,
+      };
+      
+      const formatted = formatGitError(error);
+      expect(formatted).toBe(
+        "Post-commit hook failed, but the commit was successful. You may want to check the hook configuration. Original error: error in .git/hooks/post-commit"
       );
     });
 
@@ -178,6 +223,21 @@ describe("git-utils", () => {
       expect(formatted).toBe(
         "Git command failed (git fetch): network error"
       );
+    });
+  });
+
+  describe("validateGitState", () => {
+    // Note: These tests would require mocking git operations in a real test environment
+    // For now, we're just testing the function exists and has the expected signature
+    it("should export validateGitState function", async () => {
+      expect(typeof validateGitState).toBe("function");
+    });
+  });
+
+  describe("getStagedFilesInfo", () => {
+    it("should export getStagedFilesInfo function", async () => {
+      const { getStagedFilesInfo } = await import("./git-utils.js");
+      expect(typeof getStagedFilesInfo).toBe("function");
     });
   });
 });

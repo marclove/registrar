@@ -45,14 +45,18 @@ export async function runApp(options: RunAppOptions = {}) {
     // Validate git state with enhanced error messages
     const gitValidation = await validateGitState();
     if (!gitValidation.isValid) {
+      const errorMessage = gitValidation.details 
+        ? `${gitValidation.message}${gitValidation.details}`
+        : gitValidation.message;
+        
       if (isNonInteractive) {
-        console.error(gitValidation.message);
+        console.error(errorMessage);
         process.exit(1);
       } else {
         rerender(
           <Cli
             status="error"
-            error={gitValidation.message}
+            error={errorMessage}
           />,
         );
         setTimeout(() => process.exit(1), 1000);
