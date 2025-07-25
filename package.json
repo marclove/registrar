@@ -59,7 +59,7 @@
     "@ai-sdk/provider": "^1.1.3",
     "@ai-sdk/replicate": "^0.2.8",
     "@ai-sdk/togetherai": "^0.2.14",
-    "@ai-sdk/vercel": "^0.0.1",
+    "@ai-sdk/vercel": "^0.0.3",
     "@ai-sdk/xai": "^1.2.16",
     "@iarna/toml": "^2.2.5",
     "ai": "^4.3.16",
